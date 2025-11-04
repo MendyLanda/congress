@@ -45,7 +45,15 @@
       "interactive": true
     }
   },
-  "globalEnv": ["POSTGRES_URL", "AUTH_SECRET", "PORT"],
+  "globalEnv": [
+    "POSTGRES_URL",
+    "AUTH_SECRET",
+    "PORT",
+    "LEGACY_DB_DATABASE",
+    "LEGACY_DB_HOST",
+    "LEGACY_DB_USERNAME",
+    "LEGACY_DB_PASSWORD"
+  ],
   "globalPassThroughEnv": [
     "NODE_ENV",
     "CI",

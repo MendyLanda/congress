@@ -13,6 +13,8 @@
     "auth:generate": "pnpm -F @acme/auth generate",
     "db:push": "turbo -F @acme/db push",
     "db:studio": "turbo -F @acme/db studio",
+    "db:legacy:push": "turbo -F @acme/legacy-db push",
+    "db:legacy:studio": "turbo -F @acme/legacy-db studio",
     "dev": "turbo watch dev --continue",
     "dev:next": "turbo watch dev -F @acme/nextjs...",
     "format": "turbo run format --continue -- --cache --cache-location .cache/.prettiercache",
