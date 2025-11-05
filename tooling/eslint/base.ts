@@ -72,7 +72,7 @@ export const baseConfig = defineConfig(
           allowConstantLoopConditions: true,
         },
       ],
-      "@typescript-eslint/no-non-null-assertion": "error",
+      "@typescript-eslint/no-non-null-assertion": "off",
       "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
     },
   },

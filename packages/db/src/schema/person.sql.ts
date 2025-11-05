@@ -8,7 +8,6 @@ import {
   date,
   index,
   pgEnum,
-  pgTable,
   text,
   uniqueIndex,
   varchar,
@@ -19,9 +18,10 @@ import {
   personRelationshipTypes,
 } from "@acme/validators/person";
 
-import { timestamp, timestamps, ulid } from "../types";
+import { createTable } from "../create-table";
+import { timestamp, ulid } from "../types";
 
-export const personTable = pgTable(
+export const personTable = createTable(
   "person",
   {
     id: bigserial({ mode: "number" }).primaryKey(),
@@ -30,14 +30,13 @@ export const personTable = pgTable(
     lastName: text(),
     gender: char({ length: 1 }),
     dateOfBirth: date({ mode: "date" }),
-    ...timestamps,
   },
   (table) => [check("gender_check", sql`${table.gender} IN ('M', 'F')`)],
 );
 
 export const contactTypeEnum = pgEnum("contact_type", personContactTypes);
 
-export const personContactTable = pgTable(
+export const personContactTable = createTable(
   "person_contact",
   {
     id: ulid("personContact").primaryKey(),
@@ -45,7 +44,6 @@ export const personContactTable = pgTable(
     value: text().notNull(),
     contactType: contactTypeEnum(),
     isPrimary: boolean().notNull().default(false),
-    ...timestamps,
   },
   (table) => [
     index("person_contact_person_id_index").on(table.personId),
@@ -59,7 +57,7 @@ export const personContactTable = pgTable(
   ],
 );
 
-export const personAddressTable = pgTable(
+export const personAddressTable = createTable(
   "person_address",
   {
     id: ulid("personAddress").primaryKey(),
@@ -71,7 +69,6 @@ export const personAddressTable = pgTable(
     country: char({ length: 2 }),
     startDate: timestamp("start_date").notNull().defaultNow(),
     endDate: timestamp("end_date"),
-    ...timestamps,
   },
   (table) => [
     index("person_address_person_id_index").on(table.personId),
@@ -98,7 +95,7 @@ export const relationshipTypeEnum = pgEnum(
  *
  * Siblings are implicitly created when a parent creates a relationship with multiple children.
  */
-export const personRelationshipTable = pgTable(
+export const personRelationshipTable = createTable(
   "person_relationship",
   {
     id: ulid("personRelationship").primaryKey(),
@@ -113,7 +110,6 @@ export const personRelationshipTable = pgTable(
     endDate: timestamp("end_date"),
     endReason: text(),
     details: text(),
-    ...timestamps,
   },
   (table) => [
     index("person_relationship_person_id_index").on(table.personId),

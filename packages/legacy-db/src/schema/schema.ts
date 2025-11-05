@@ -5,7 +5,6 @@ import {
   foreignKey,
   integer,
   pgEnum,
-  pgTable,
   serial,
   timestamp,
   varchar,
@@ -205,7 +204,7 @@ export const enumWalUserObjectsRole = pgEnum("enum_WAL_UserObjects_role", [
   "temp",
 ]);
 
-export const sStudentObject2025S = pgTable("S_StudentObject_2025s", {
+export const sStudentObject2025S = createTable("S_StudentObject_2025s", {
   id: serial().primaryKey().notNull(),
   firstName: varchar({ length: 255 }),
   lastName: varchar({ length: 255 }),
@@ -268,7 +267,7 @@ export const sStudentObject2025S = pgTable("S_StudentObject_2025s", {
   bankBranchNo: integer(),
 });
 
-export const sDocumentObject2025S = pgTable(
+export const sDocumentObject2025S = createTable(
   "S_DocumentObject_2025s",
   {
     id: serial().primaryKey().notNull(),
@@ -289,7 +288,7 @@ export const sDocumentObject2025S = pgTable(
   ],
 );
 
-export const sPaymentObject2025S = pgTable(
+export const sPaymentObject2025S = createTable(
   "S_PaymentObject_2025s",
   {
     id: serial().primaryKey().notNull(),
@@ -329,7 +328,7 @@ export const sPaymentObject2025S = pgTable(
   ],
 );
 
-export const sUserObject2025S = pgTable("S_UserObject_2025s", {
+export const sUserObject2025S = createTable("S_UserObject_2025s", {
   id: serial().primaryKey().notNull(),
   username: varchar({ length: 255 }),
   password: varchar({ length: 255 }),
@@ -342,7 +341,7 @@ export const sUserObject2025S = pgTable("S_UserObject_2025s", {
   updatedAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
 });
 
-export const sSupportObject2025S = pgTable(
+export const sSupportObject2025S = createTable(
   "S_SupportObject_2025s",
   {
     id: serial().primaryKey().notNull(),
@@ -372,7 +371,7 @@ export const sSupportObject2025S = pgTable(
   ],
 );
 
-export const sOfficeNoteObject2025S = pgTable(
+export const sOfficeNoteObject2025S = createTable(
   "S_OfficeNoteObject_2025s",
   {
     id: serial().primaryKey().notNull(),
@@ -400,7 +399,7 @@ export const sOfficeNoteObject2025S = pgTable(
   ],
 );
 
-export const couponCardObjects = pgTable(
+export const couponCardObjects = createTable(
   "CouponCardObjects",
   {
     id: integer().primaryKey().notNull(),
@@ -428,7 +427,7 @@ export const couponCardObjects = pgTable(
   ],
 );
 
-export const documentObjects = pgTable(
+export const documentObjects = createTable(
   "DocumentObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -455,7 +454,7 @@ export const documentObjects = pgTable(
   ],
 );
 
-export const coordinatorObjects = pgTable(
+export const coordinatorObjects = createTable(
   "CoordinatorObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -491,7 +490,7 @@ export const coordinatorObjects = pgTable(
   ],
 );
 
-export const committeePersonObjects = pgTable(
+export const committeePersonObjects = createTable(
   "CommitteePersonObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -521,7 +520,7 @@ export const committeePersonObjects = pgTable(
   ],
 );
 
-export const rhOrganizationObjects = pgTable("RH_OrganizationObjects", {
+export const rhOrganizationObjects = createTable("RH_OrganizationObjects", {
   id: serial().primaryKey().notNull(),
   name: varchar({ length: 255 }),
   address: varchar({ length: 255 }),
@@ -532,7 +531,7 @@ export const rhOrganizationObjects = pgTable("RH_OrganizationObjects", {
   updatedAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
 });
 
-export const rhPaymentObjects = pgTable(
+export const rhPaymentObjects = createTable(
   "RH_PaymentObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -572,7 +571,7 @@ export const rhPaymentObjects = pgTable(
   ],
 );
 
-export const rhCouponCardObjects = pgTable(
+export const rhCouponCardObjects = createTable(
   "RH_CouponCardObjects",
   {
     id: integer().primaryKey().notNull(),
@@ -593,7 +592,7 @@ export const rhCouponCardObjects = pgTable(
   ],
 );
 
-export const paymentObjects = pgTable(
+export const paymentObjects = createTable(
   "PaymentObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -639,7 +638,7 @@ export const paymentObjects = pgTable(
   ],
 );
 
-export const needyObjects = pgTable(
+export const needyObjects = createTable(
   "NeedyObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -691,7 +690,7 @@ export const needyObjects = pgTable(
   ],
 );
 
-export const organizationObjects = pgTable(
+export const organizationObjects = createTable(
   "OrganizationObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -713,7 +712,7 @@ export const organizationObjects = pgTable(
   ],
 );
 
-export const rhNeedyObjects = pgTable(
+export const rhNeedyObjects = createTable(
   "RH_NeedyObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -751,7 +750,7 @@ export const rhNeedyObjects = pgTable(
   ],
 );
 
-export const rhStudentObjects = pgTable(
+export const rhStudentObjects = createTable(
   "RH_StudentObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -774,7 +773,7 @@ export const rhStudentObjects = pgTable(
   ],
 );
 
-export const rhSupportRecommendationObjects = pgTable(
+export const rhSupportRecommendationObjects = createTable(
   "RH_SupportRecommendationObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -804,7 +803,7 @@ export const rhSupportRecommendationObjects = pgTable(
   ],
 );
 
-export const rhDocumentObjects = pgTable(
+export const rhDocumentObjects = createTable(
   "RH_DocumentObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -825,7 +824,7 @@ export const rhDocumentObjects = pgTable(
   ],
 );
 
-export const projectObjects = pgTable("ProjectObjects", {
+export const projectObjects = createTable("ProjectObjects", {
   id: serial().primaryKey().notNull(),
   name: varchar({ length: 255 }),
   isActive: integer(),
@@ -833,7 +832,7 @@ export const projectObjects = pgTable("ProjectObjects", {
   updatedAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
 });
 
-export const rhCoordinatorObjects = pgTable(
+export const rhCoordinatorObjects = createTable(
   "RH_CoordinatorObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -863,7 +862,7 @@ export const rhCoordinatorObjects = pgTable(
   ],
 );
 
-export const sStudentObject2023S = pgTable("S_StudentObject_2023s", {
+export const sStudentObject2023S = createTable("S_StudentObject_2023s", {
   id: serial().primaryKey().notNull(),
   firstName: varchar({ length: 255 }),
   lastName: varchar({ length: 255 }),
@@ -918,7 +917,7 @@ export const sStudentObject2023S = pgTable("S_StudentObject_2023s", {
   newDocs: integer(),
 });
 
-export const sOfficeNoteObject2024S = pgTable(
+export const sOfficeNoteObject2024S = createTable(
   "S_OfficeNoteObject_2024s",
   {
     id: serial().primaryKey().notNull(),
@@ -946,7 +945,7 @@ export const sOfficeNoteObject2024S = pgTable(
   ],
 );
 
-export const sStudentObject2024S = pgTable("S_StudentObject_2024s", {
+export const sStudentObject2024S = createTable("S_StudentObject_2024s", {
   id: serial().primaryKey().notNull(),
   firstName: varchar({ length: 255 }),
   lastName: varchar({ length: 255 }),
@@ -1003,7 +1002,7 @@ export const sStudentObject2024S = pgTable("S_StudentObject_2024s", {
   isWifeHaravotBarzelService: boolean(),
 });
 
-export const sDocumentObjects = pgTable(
+export const sDocumentObjects = createTable(
   "S_DocumentObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -1024,7 +1023,7 @@ export const sDocumentObjects = pgTable(
   ],
 );
 
-export const sOfficeNoteObjects = pgTable(
+export const sOfficeNoteObjects = createTable(
   "S_OfficeNoteObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -1052,7 +1051,7 @@ export const sOfficeNoteObjects = pgTable(
   ],
 );
 
-export const sOfficeNoteObject2023S = pgTable(
+export const sOfficeNoteObject2023S = createTable(
   "S_OfficeNoteObject_2023s",
   {
     id: serial().primaryKey().notNull(),
@@ -1080,7 +1079,7 @@ export const sOfficeNoteObject2023S = pgTable(
   ],
 );
 
-export const sPaymentObject2023S = pgTable(
+export const sPaymentObject2023S = createTable(
   "S_PaymentObject_2023s",
   {
     id: serial().primaryKey().notNull(),
@@ -1120,7 +1119,7 @@ export const sPaymentObject2023S = pgTable(
   ],
 );
 
-export const sPaymentObject2024S = pgTable(
+export const sPaymentObject2024S = createTable(
   "S_PaymentObject_2024s",
   {
     id: serial().primaryKey().notNull(),
@@ -1160,7 +1159,7 @@ export const sPaymentObject2024S = pgTable(
   ],
 );
 
-export const sPaymentObjects = pgTable(
+export const sPaymentObjects = createTable(
   "S_PaymentObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -1200,7 +1199,7 @@ export const sPaymentObjects = pgTable(
   ],
 );
 
-export const sDocumentObject2024S = pgTable(
+export const sDocumentObject2024S = createTable(
   "S_DocumentObject_2024s",
   {
     id: serial().primaryKey().notNull(),
@@ -1221,7 +1220,7 @@ export const sDocumentObject2024S = pgTable(
   ],
 );
 
-export const rhUserObjects = pgTable("RH_UserObjects", {
+export const rhUserObjects = createTable("RH_UserObjects", {
   id: serial().primaryKey().notNull(),
   username: varchar({ length: 255 }),
   password: varchar({ length: 255 }),
@@ -1235,7 +1234,7 @@ export const rhUserObjects = pgTable("RH_UserObjects", {
   updatedAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
 });
 
-export const sDocumentObject2023S = pgTable(
+export const sDocumentObject2023S = createTable(
   "S_DocumentObject_2023s",
   {
     id: serial().primaryKey().notNull(),
@@ -1256,7 +1255,7 @@ export const sDocumentObject2023S = pgTable(
   ],
 );
 
-export const sUserObject2023S = pgTable("S_UserObject_2023s", {
+export const sUserObject2023S = createTable("S_UserObject_2023s", {
   id: serial().primaryKey().notNull(),
   username: varchar({ length: 255 }),
   password: varchar({ length: 255 }),
@@ -1269,7 +1268,7 @@ export const sUserObject2023S = pgTable("S_UserObject_2023s", {
   updatedAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
 });
 
-export const walDocumentObjects = pgTable(
+export const walDocumentObjects = createTable(
   "WAL_DocumentObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -1290,7 +1289,7 @@ export const walDocumentObjects = pgTable(
   ],
 );
 
-export const sSupportObject2024S = pgTable(
+export const sSupportObject2024S = createTable(
   "S_SupportObject_2024s",
   {
     id: serial().primaryKey().notNull(),
@@ -1320,7 +1319,7 @@ export const sSupportObject2024S = pgTable(
   ],
 );
 
-export const sUserObjects = pgTable("S_UserObjects", {
+export const sUserObjects = createTable("S_UserObjects", {
   id: serial().primaryKey().notNull(),
   username: varchar({ length: 255 }),
   password: varchar({ length: 255 }),
@@ -1333,7 +1332,7 @@ export const sUserObjects = pgTable("S_UserObjects", {
   updatedAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
 });
 
-export const sSupportObjects = pgTable(
+export const sSupportObjects = createTable(
   "S_SupportObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -1363,7 +1362,7 @@ export const sSupportObjects = pgTable(
   ],
 );
 
-export const studentChildObjects = pgTable(
+export const studentChildObjects = createTable(
   "StudentChildObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -1392,7 +1391,7 @@ export const studentChildObjects = pgTable(
   ],
 );
 
-export const sUserObject2024S = pgTable("S_UserObject_2024s", {
+export const sUserObject2024S = createTable("S_UserObject_2024s", {
   id: serial().primaryKey().notNull(),
   username: varchar({ length: 255 }),
   password: varchar({ length: 255 }),
@@ -1405,7 +1404,7 @@ export const sUserObject2024S = pgTable("S_UserObject_2024s", {
   updatedAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
 });
 
-export const sSupportObject2023S = pgTable(
+export const sSupportObject2023S = createTable(
   "S_SupportObject_2023s",
   {
     id: serial().primaryKey().notNull(),
@@ -1435,7 +1434,7 @@ export const sSupportObject2023S = pgTable(
   ],
 );
 
-export const supportRecommendationObjects = pgTable(
+export const supportRecommendationObjects = createTable(
   "SupportRecommendationObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -1471,7 +1470,7 @@ export const supportRecommendationObjects = pgTable(
   ],
 );
 
-export const sStudentObjects = pgTable("S_StudentObjects", {
+export const sStudentObjects = createTable("S_StudentObjects", {
   id: serial().primaryKey().notNull(),
   firstName: varchar({ length: 255 }),
   lastName: varchar({ length: 255 }),
@@ -1524,7 +1523,7 @@ export const sStudentObjects = pgTable("S_StudentObjects", {
   supportAmount: integer(),
 });
 
-export const studentObjects = pgTable(
+export const studentObjects = createTable(
   "StudentObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -1556,7 +1555,7 @@ export const studentObjects = pgTable(
   ],
 );
 
-export const walOfficeNoteObjects = pgTable(
+export const walOfficeNoteObjects = createTable(
   "WAL_OfficeNoteObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -1584,7 +1583,7 @@ export const walOfficeNoteObjects = pgTable(
   ],
 );
 
-export const userObjects = pgTable(
+export const userObjects = createTable(
   "UserObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -1609,7 +1608,7 @@ export const userObjects = pgTable(
   ],
 );
 
-export const walPersonObjects = pgTable(
+export const walPersonObjects = createTable(
   "WAL_PersonObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -1632,7 +1631,7 @@ export const walPersonObjects = pgTable(
   ],
 );
 
-export const walPaymentObjects = pgTable(
+export const walPaymentObjects = createTable(
   "WAL_PaymentObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -1672,7 +1671,7 @@ export const walPaymentObjects = pgTable(
   ],
 );
 
-export const walSupportObjects = pgTable(
+export const walSupportObjects = createTable(
   "WAL_SupportObjects",
   {
     id: serial().primaryKey().notNull(),
@@ -1703,7 +1702,7 @@ export const walSupportObjects = pgTable(
   ],
 );
 
-export const walUserObjects = pgTable("WAL_UserObjects", {
+export const walUserObjects = createTable("WAL_UserObjects", {
   id: serial().primaryKey().notNull(),
   username: varchar({ length: 255 }),
   password: varchar({ length: 255 }),
@@ -1716,7 +1715,7 @@ export const walUserObjects = pgTable("WAL_UserObjects", {
   updatedAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
 });
 
-export const walRequestObjects = pgTable("WAL_RequestObjects", {
+export const walRequestObjects = createTable("WAL_RequestObjects", {
   id: serial().primaryKey().notNull(),
   caseOpenDate: timestamp({ withTimezone: true, mode: "string" }),
   firstName: varchar({ length: 255 }),

@@ -4,13 +4,13 @@ import {
   index,
   integer,
   pgEnum,
-  pgTable,
   text,
   timestamp,
   varchar,
 } from "drizzle-orm/pg-core";
 
-import { timestamps, ulid } from "../types";
+import { createTable } from "../create-table";
+import { ulid } from "../types";
 import { userTable } from "./dashboard-auth.sql";
 
 /**
@@ -37,7 +37,7 @@ export const beneficiaryDocumentStatusEnum = pgEnum(
  * beneficiary account table
  * Links to person table via national_id
  */
-export const beneficiaryAccountTable = pgTable(
+export const beneficiaryAccountTable = createTable(
   "beneficiary_account",
   {
     id: ulid("beneficiaryAccount").primaryKey(),
@@ -45,17 +45,16 @@ export const beneficiaryAccountTable = pgTable(
     phoneNumber: varchar("phone_number", { length: 15 }).notNull().unique(), // E.164 format +972501234567
     passwordHash: text("password_hash").notNull(),
     status: beneficiaryAccountStatusEnum("status").notNull().default("pending"),
-    approvedAt: timestamp("approved_at"),
+    timeApproved: timestamp("time_approved"),
     approvedBy: ulid("user").references(() => userTable.id, {
       onDelete: "set null",
     }),
     rejectionReason: text("rejection_reason"),
     suspendedReason: text("suspended_reason"),
     suspendedUntil: timestamp("suspended_until"),
-    lastLoginAt: timestamp("last_login_at"),
+    lastLoginTime: timestamp("last_login_time"),
     failedLoginAttempts: integer("failed_login_attempts").default(0).notNull(),
     lockedUntil: timestamp("locked_until"), // Account locked after too many failed attempts
-    ...timestamps,
   },
   (table) => [
     index("beneficiary_account_national_id_index").on(table.nationalId),
@@ -67,7 +66,7 @@ export const beneficiaryAccountTable = pgTable(
  * beneficiary session table
  * Stores JWT tokens or session IDs for authentication
  */
-export const beneficiarySessionTable = pgTable(
+export const beneficiarySessionTable = createTable(
   "beneficiary_session",
   {
     id: ulid("beneficiarySession").primaryKey(),
@@ -78,7 +77,6 @@ export const beneficiarySessionTable = pgTable(
     expiresAt: timestamp("expires_at").notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
-    ...timestamps,
   },
   (table) => [
     index("beneficiary_session_account_id_index").on(table.accountId),
@@ -91,7 +89,7 @@ export const beneficiarySessionTable = pgTable(
  * Password reset token table
  * Stores temporary tokens for password resets (sent via voice call)
  */
-export const beneficiaryPasswordResetTable = pgTable(
+export const beneficiaryPasswordResetTable = createTable(
   "beneficiary_password_reset",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
@@ -102,7 +100,6 @@ export const beneficiaryPasswordResetTable = pgTable(
     expiresAt: timestamp("expires_at").notNull(),
     usedAt: timestamp("used_at"),
     ipAddress: text("ip_address"),
-    ...timestamps,
   },
   (table) => [
     index("beneficiary_password_reset_account_id_index").on(table.accountId),

@@ -1,8 +1,9 @@
-import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, text, timestamp } from "drizzle-orm/pg-core";
 
+import { createTable } from "../create-table";
 import { ulid } from "../types";
 
-export const userTable = pgTable("user", {
+export const userTable = createTable("user", {
   id: ulid("user").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
@@ -19,7 +20,7 @@ export const userTable = pgTable("user", {
   banExpires: timestamp("ban_expires"),
 });
 
-export const sessionTable = pgTable("session", {
+export const sessionTable = createTable("session", {
   id: ulid("session").primaryKey(),
   expiresAt: timestamp("expires_at").notNull(),
   token: text("token").notNull().unique(),
@@ -35,7 +36,7 @@ export const sessionTable = pgTable("session", {
   impersonatedBy: text("impersonated_by"),
 });
 
-export const accountTable = pgTable("account", {
+export const accountTable = createTable("account", {
   id: ulid("account").primaryKey(),
   accountId: text("account_id").notNull(),
   providerId: text("provider_id").notNull(),
@@ -55,7 +56,7 @@ export const accountTable = pgTable("account", {
     .notNull(),
 });
 
-export const verificationTable = pgTable("verification", {
+export const verificationTable = createTable("verification", {
   id: ulid("verification").primaryKey(),
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
