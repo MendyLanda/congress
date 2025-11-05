@@ -1,0 +1,26 @@
+.dialog-header {
+    margin-bottom: 18px;
+    position: sticky;
+    top: -24px;
+    z-index: 999;
+}
+
+.dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.duplicate-ssn {
+    margin: 10px 0;
+    color: #ff8d00;
+    margin: auto;
+    max-width: 200px;
+    text-align: center;
+
+    mat-icon {
+        font-size: smaller;
+        width: auto;
+        height: auto;
+        margin: 0 5px;
+    }
+}

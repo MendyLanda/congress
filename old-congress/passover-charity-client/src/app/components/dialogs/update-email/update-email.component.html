@@ -1,0 +1,30 @@
+<div dir="rtl" class="dialog-container">
+    <div class="dialog-header">השלמת כתובת אימייל</div>
+    <form dir="rtl" [formGroup]='updateEmailForm' (ngSubmit)='onSubmit()'>
+
+        <div>יש להשתמש בטופס זה רק במקרה וקיבלתם הודעה על השלמת כתובת אימייל</div>
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label>מספר זהות</mat-label>
+            <input matInput placeholder="" formControlName="ssn">
+            <mat-error *ngIf='CSsn.errors'>נא להזין מספר זהות תקין עם 9 ספרות, אם מספר הזהות קצר יותר יש להוסיף 0-ים בתחילת המספר</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label>מזהה בקשה</mat-label>
+            <input matInput placeholder="" formControlName="needyId">
+            <mat-hint>מספר הזיהוי של הבקשה שנמסר בעת הרישום</mat-hint>
+            <mat-error *ngIf='CNeedyId.errors'>נא להזין מזהה</mat-error>
+        </mat-form-field>
+    
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label>הוספת אימייל</mat-label>
+            <input matInput placeholder="" formControlName="email">
+            <mat-hint>לכתובת זו נשלח את השובר</mat-hint>
+            <mat-error *ngIf='CEmail.errors'>נא להזין כתובת אימייל תקינה</mat-error>
+        </mat-form-field>
+
+        <div class="dialog-footer">
+            <button mat-button [disabled]="!updateEmailForm.valid" color="primary" type="submit">שליחה</button>
+        </div>
+    </form>
+</div>

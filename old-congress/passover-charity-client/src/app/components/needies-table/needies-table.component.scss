@@ -1,0 +1,101 @@
+// // @use "../../../styles";
+
+.table-container {
+    border: 7px solid #f3f3f3;
+    border-radius: 10px;
+    box-shadow: none;
+    max-height: 70vh;
+    overflow: auto;
+
+    mat-table {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .table-header-text {
+        display: flex;
+        font-size: large;
+        font-weight: bold;
+    }
+
+    .table-header {
+        position: sticky;
+        top: 0;
+        z-index: 99;
+    }
+
+    .table-filter-header {
+        position: sticky;
+        top: 56px;
+        z-index: 99;
+    }
+
+    .cancel-filter {
+        color: #8b8b8b;
+        font-size: 19px;
+        cursor: pointer;
+        vertical-align: -6px;
+    }
+
+    .reset-filters-btn {
+        position: absolute;
+        left: calc(3vw + 5px);
+        margin-top: 64px;
+    }
+
+    .filter-field {
+        mat-form-field {
+            width: 44%;
+        }
+    }
+
+    .mat-column-edit,
+    .mat-column-delete {
+        flex: 0.3;
+
+        mat-icon {
+            cursor: pointer;
+        }
+    }
+
+    .mat-column-action {
+        padding: 0 11px;
+    }
+
+    .mat-column-expandedDetail {
+        width: 100%;
+
+        app-full-needy-details {
+            width: 100%;
+        }
+    }
+}
+
+.element-detail {
+   min-height: 48px;
+   width: 100%;
+}
+
+mat-row.detail-row {
+    min-height: 0;
+}
+
+mat-row {
+    cursor: pointer;
+}
+
+// .element-row:not(.expanded-row):active {
+//     background: black;
+// }
+
+.element-row mat-cell {
+    border-bottom-width: 0;
+}
+
+.include-cards {
+    background-color: #fdd5d5;
+}
+
+.on-reject {
+    background-color: #e2c5ff;
+}

@@ -1,0 +1,111 @@
+<div *ngIf="updateMode" mat-dialog-title class="dialog-header">
+    <span class="title">עריכת פרטי אברך</span>
+    <span class="close-btn" (click)="closeDialog()">
+        <mat-icon>close</mat-icon>
+    </span>
+</div>
+<form dir="rtl" [formGroup]='studentForm' (ngSubmit)='onSubmit()' enctype="multipart/form-data">
+
+    <div *ngIf="type != formTypes.Young">
+        <div *ngIf="CMartialStatus?.value === MaritalStatus.married">
+            <div>פרטי האישה</div>
+            <div class='form-row-group'>
+                <mat-form-field class="form-field" appearance="outline">
+                    <mat-label>מספר זהות</mat-label>
+                    <input matInput placeholder="" formControlName="ssnWife">
+                    <mat-error *ngIf='CSsnWife.errors'>נא להזין מספר זהות תקין עם 9 ספרות, אם מספר הזהות קצר יותר יש
+                        להוסיף 0-ים בתחילת המספר</mat-error>
+                </mat-form-field>
+
+                <mat-form-field class="form-field" appearance="outline">
+                    <mat-label>שם פרטי</mat-label>
+                    <input matInput placeholder="" formControlName="firstNameWife">
+                    <mat-error *ngIf='CFirstNameWife.errors'>נא להזין שם פרטי</mat-error>
+                </mat-form-field>
+
+                <mat-form-field class="form-field" appearance="outline">
+                    <mat-label>שם משפחה</mat-label>
+                    <input matInput placeholder="" formControlName="lastNameWife">
+                    <mat-error *ngIf='CLastNameWife.errors'>נא להזין שם משפחה</mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div *ngIf="CStudentChildren.length">{{isWelfareForm() ? "פרטי הילדים בבית מעל גיל 18" : "פרטי הילדים בבית"}}</div>
+        <div formArrayName="studentChildren">
+            <div *ngFor="let committeePerson of CStudentChildren.controls; index as i;">
+                <div [formGroupName]="i" class='form-row-group'>
+                    <mat-form-field class="form-field" appearance="outline">
+                        <mat-label>שם הילד</mat-label>
+                        <input matInput placeholder="" formControlName="name">
+                        <mat-error *ngIf='CStudentChildren.controls[i].get("name")?.errors'>נא להזין שם תקין
+                            בעברית</mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field class="form-field" appearance="outline">
+                        <mat-label>מספר זהות</mat-label>
+                        <input matInput placeholder="" formControlName="ssn">
+                        <mat-error *ngIf='CStudentChildren.controls[i].get("ssn")?.errors'>נא להזין מספר זהות תקין עם 9
+                            ספרות, אם מספר הזהות קצר יותר יש להוסיף 0-ים בתחילת המספר</mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="type == formTypes.Student">פרטי הכולל</div>
+    <div *ngIf="type == formTypes.Rabbi">פרטי בית הכנסת</div>
+    <div *ngIf="type == formTypes.Young">פרטי הישיבה</div>
+    <div *ngIf="type == formTypes.Student || type == formTypes.Rabbi || type == formTypes.Young" class='form-row-group'>
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label *ngIf="type == formTypes.Student">שם הכולל</mat-label>
+            <mat-label *ngIf="type == formTypes.Rabbi">שם בית הכנסת</mat-label>
+            <mat-label *ngIf="type == formTypes.Young">שם הישיבה</mat-label>
+            <input matInput placeholder="" formControlName="kollelName">
+            <mat-error *ngIf='CKollelName?.errors'>נא להזין שם כולל</mat-error>
+        </mat-form-field>
+
+        <mat-form-field *ngIf="type == formTypes.Student" class="form-field" appearance="outline">
+            <mat-label>סוג כולל</mat-label>
+            <mat-select formControlName="kollelType" required>
+                <mat-option>--</mat-option>
+                <mat-option *ngFor="let type of kollelTypes" [value]="type">
+                    {{type}}
+                </mat-option>
+            </mat-select>
+            <mat-error *ngIf='CKollelType?.errors'>נא לבחור סוג כולל</mat-error>
+        </mat-form-field>
+
+        <mat-form-field *ngIf="type == formTypes.Young" class="form-field" appearance="outline">
+            <mat-label>סוג ישיבה</mat-label>
+            <mat-select formControlName="kollelType" required>
+                <mat-option>--</mat-option>
+                <mat-option *ngFor="let type of YeshivaType" [value]="type">
+                    {{type}}
+                </mat-option>
+            </mat-select>
+            <mat-error *ngIf='CKollelType?.errors'>נא לבחור סוג ישיבה</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label *ngIf="type == formTypes.Student">שם ראש הכולל</mat-label>
+            <mat-label *ngIf="type == formTypes.Rabbi">שם גבאי בית הכנסת</mat-label>
+            <mat-label *ngIf="type == formTypes.Young">שם ראש הישיבה</mat-label>
+            <input matInput placeholder="" formControlName="headOfTheKollelName">
+            <mat-error *ngIf='CHeadOfTheKollelName?.errors'>נא להזין שם</mat-error>
+        </mat-form-field>
+    </div>
+
+    <div *ngIf="type == formTypes.Student || type == formTypes.Rabbi || type == formTypes.Young" class='form-row-group'>
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label *ngIf="type == formTypes.Student">טלפון של ראש הכולל</mat-label>
+            <mat-label *ngIf="type == formTypes.Rabbi">טלפון של גבאי בית הכנסת</mat-label>
+            <mat-label *ngIf="type == formTypes.Young">טלפון של ראש הישיבה</mat-label>
+            <input matInput placeholder="" formControlName="headOfTheKollelPhone">
+            <mat-error *ngIf='CHeadOfTheKollelPhone?.errors'>נא להזין טלפון</mat-error>
+        </mat-form-field>
+    </div>
+
+    <div class="dialog-footer" *ngIf="updateMode">
+        <button mat-button [disabled]="!studentForm.valid" color="primary" type="submit">עדכן</button>
+    </div>
+</form>

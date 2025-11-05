@@ -1,0 +1,233 @@
+<div mat-dialog-title class="dialog-header">
+    <span class="title">{{updateMode ? "עריכת פרטים" : "פתיחת בקשה לתמיכה"}}</span>
+    <span class="close-btn" (click)="closeDialog()">
+        <mat-icon>close</mat-icon>
+    </span>
+</div>
+<div class="dialog-container">
+    <form dir="rtl" [formGroup]='newNeedyForm' (ngSubmit)='onSubmit()' enctype="multipart/form-data">
+        <mat-form-field *ngIf="!updateMode" mat-form-field appearance="outline">
+            <mat-label>סוג טופס</mat-label>
+            <mat-select matInput formControlName="needyType" required>
+                <mat-option>--</mat-option>
+                <mat-option *ngFor="let type of formTypes" [value]="type">
+                    {{type}}
+                </mat-option>
+            </mat-select>
+            <mat-error *ngIf='CNeedyType.errors'>חובה לבחור סוג</mat-error>
+        </mat-form-field>
+
+        <div class='form-row-group'>
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label>מספר זהות</mat-label>
+                <input matInput placeholder="" formControlName="ssn">
+                <mat-error *ngIf='CSsn.errors'>נא להזין מספר זהות תקין עם 9 ספרות, אם מספר הזהות קצר יותר יש להוסיף 0-ים
+                    בתחילת המספר</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label>שם פרטי</mat-label>
+                <input matInput placeholder="" formControlName="firstName">
+                <mat-error *ngIf='CFirstName.errors'>נא להזין שם פרטי</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label>שם משפחה</mat-label>
+                <input matInput placeholder="" formControlName="lastName">
+                <mat-error *ngIf='CLastName.errors'>נא להזין שם משפחה</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class='form-row-group'>
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label *ngIf="CNeedyType.value != NeedyType.Gabbai">כתובת מגורים</mat-label>
+                <mat-label *ngIf="CNeedyType.value == NeedyType.Gabbai">כתובת בית הכנסת</mat-label>
+                <input matInput placeholder="" formControlName="address">
+                <mat-error *ngIf='CAddress.errors'>נא להזין כתובת</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label>עיר</mat-label>
+                <input matInput placeholder="" formControlName="city">
+                <mat-error *ngIf='CCity.errors'>נא להזין שם עיר</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label>טלפון</mat-label>
+                <input matInput placeholder="" formControlName="phone">
+                <mat-error *ngIf='CPhone.errors'>נא להזין מספר טלפון תקין</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class='form-row-group'>
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label *ngIf="CNeedyType.value != NeedyType.Gabbai">מספר טלפון נוסף</mat-label>
+                <mat-label *ngIf="CNeedyType.value == NeedyType.Gabbai">מספר טלפון של רב ממליץ</mat-label>
+                <input matInput placeholder="" formControlName="mobilePhone">
+                <mat-error *ngIf='CMobilePhone.errors'>נא להזין מספר טלפון תקין</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class='form-row-group' *ngIf="CNeedyType.value != NeedyType.Gabbai && CNeedyType.value != NeedyType.Young">
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label>מצב אישי</mat-label>
+                <mat-select matInput formControlName="maritalStatus" required>
+                    <mat-option>--</mat-option>
+                    <mat-option *ngFor="let status of maritalStatus" [value]="status">
+                        {{status}}
+                    </mat-option>
+                </mat-select>
+                <mat-error *ngIf='CMaritalStatus.errors'>יש לבחור מצב אישי</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label>{{isStudentFrom() ? "מספר ילדים בבית (שאינם נשואים)" : "מספר נפשות בבית"}}</mat-label>
+                <input matInput placeholder="" formControlName="numberOfPersons">
+                <mat-hint>שדה חובה</mat-hint>
+                <mat-error *ngIf='CNumberOfPersons?.errors'>נא להזין מספר נפשות בבית</mat-error>
+            </mat-form-field>
+            <mat-form-field *ngIf="isWelfareForm()" class="form-field" appearance="outline">
+                <mat-label>מתוך הילדים בבית, כמה מתחת גיל 18</mat-label>
+                <input matInput placeholder="" formControlName="numberOfPersonsUnder18">
+                <mat-error *ngIf='CNumberOfPersonsUnder18?.errors'>נא להזין מספר ילדים בבית מתחת גיל 18</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class='form-row-group'>
+            <mat-form-field class="form-field" appearance="outline" *ngIf="idSsnDocRequired()">
+                <mat-label>תעודת זהות עם ספח</mat-label>
+                <ngx-mat-file-input formControlName="ssnDocument"></ngx-mat-file-input>
+                <mat-hint>
+                    מסמך חובה
+                    <span *ngIf="CNeedyType.value == NeedyType.Young">. אם אין תז, יש לצרף ספח של אחד ההורים</span>
+                </mat-hint>
+                <mat-hint *ngIf="CSSNDocument?.errors == null && CNeedyType.value != NeedyType.Young">צירוף ספח תעודת
+                    זהות יכול לזכות בתמיכה גבוהה יותר לפי
+                    מספר הנפשות בבית</mat-hint>
+                <mat-error *ngIf='CSSNDocument?.errors?.["maxContentSize"]'>קובץ מקסימלי עד 2 מגה</mat-error>
+                <mat-error *ngIf='CSSNDocument?.errors?.["extensionNotValid"]'>סוג קובץ לא נתמך, יש להעלות תמונות או PDF
+                    בלבד</mat-error>
+            </mat-form-field>
+
+            <mat-form-field *ngIf="CNeedyType.value == NeedyType.Young" class="form-field" appearance="outline">
+                <mat-label>כתובת אימייל</mat-label>
+                <input matInput placeholder="" formControlName="email">
+                <mat-hint>לכתובת זו נשלח את השובר</mat-hint>
+                <mat-error *ngIf='CMobilePhone.errors'>נא להזין כתובת אימייל תקינה</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div *ngIf="!updateMode" [ngSwitch]="CNeedyType.value" class="student-container">
+            <div *ngSwitchCase="NeedyType.Student">
+                <app-update-student-details [CNumberOfChildren]="CNumberOfPersons" [type]="CNeedyType.value"
+                    [CMartialStatus]="CMaritalStatus" #studentForm></app-update-student-details>
+            </div>
+
+            <div *ngSwitchCase="NeedyType.Rabbi">
+                <app-update-student-details [CNumberOfChildren]="CNumberOfPersons" [type]="CNeedyType.value"
+                    [CMartialStatus]="CMaritalStatus" #studentForm></app-update-student-details>
+            </div>
+
+            <div *ngSwitchCase="NeedyType.Young">
+                <app-update-student-details [CNumberOfChildren]="CNumberOfPersons" [type]="CNeedyType.value"
+                    [CMartialStatus]="CMaritalStatus" #studentForm></app-update-student-details>
+            </div>
+
+            <div *ngSwitchCase="NeedyType.Welfare">
+                <app-update-student-details [CNumberOfChildren]="CNumberOfPersons" [CChildrenUnder18]="CNumberOfPersonsUnder18" [type]="CNeedyType.value"
+                    [CMartialStatus]="CMaritalStatus" #studentForm></app-update-student-details>
+            </div>
+
+            <div *ngSwitchCase="NeedyType.Needy">
+                <app-update-student-details [CNumberOfChildren]="CNumberOfPersons" [CChildrenUnder18]="CNumberOfPersonsUnder18" [type]="CNeedyType.value"
+                    [CMartialStatus]="CMaritalStatus" #studentForm></app-update-student-details>
+            </div>
+
+            <div *ngSwitchCase="isNeedyTypeCase(CNeedyType.value)">
+                <div class='form-row-group'>
+                    <mat-form-field *ngIf='CDescription' class="form-field" appearance="outline">
+                        <mat-label>הערה</mat-label>
+                        <input matInput placeholder="" formControlName="description">
+                        <mat-error *ngIf='CDescription?.errors'></mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field *ngIf='CLlocalCommunityRecommendation_sum' class="form-field" appearance="outline">
+                        <mat-label>סכום המלצה לתמיכה</mat-label>
+                        <input matInput placeholder="" formControlName="localCommunityRecommendationSum">
+                        <mat-error *ngIf='CLlocalCommunityRecommendation_sum?.errors'>ניתן לכתוב רק מספרים
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <div *ngSwitchCase="NeedyType.Welfare">
+                <div class='form-row-group'>
+                    <mat-form-field class="form-field" appearance="outline">
+                        <mat-label>הערה</mat-label>
+                        <input matInput placeholder="" formControlName="description">
+                        <mat-error *ngIf='CDescription?.errors'></mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field class="form-field" appearance="outline">
+                        <mat-label>סכום המלצה לתמיכה</mat-label>
+                        <input matInput placeholder="" formControlName="welfareDepartmentRecommendationSum">
+                        <mat-error *ngIf='CWelfareDepartmentRecommendation_sum?.errors'>ניתן לכתוב רק מספרים
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <mat-form-field *ngIf="getFileName(CNeedyType.value)" class="form-field" appearance="outline">
+                <mat-label>
+                    {{getFileName(CNeedyType.value) }}
+                </mat-label>
+                <ngx-mat-file-input formControlName="confirmationDocument"></ngx-mat-file-input>
+                <mat-hint>מסמך חובה</mat-hint>
+                <mat-error *ngIf='CConfirmationDocument?.errors?.["maxContentSize"]'>קובץ מקסימלי עד 2 מגה</mat-error>
+                <mat-error *ngIf='CConfirmationDocument?.errors?.["extensionNotValid"]'>סוג קובץ לא נתמך, יש להעלות
+                    תמונות או PDF בלבד</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="form-field" appearance="outline" *ngIf="CNeedyType.value != NeedyType.Young">
+                <mat-label>טופס לועדת חריגים</mat-label>
+                <ngx-mat-file-input formControlName="exceptionsCommittee"></ngx-mat-file-input>
+                <mat-error *ngIf='CExceptionsCommittee?.errors?.["maxContentSize"]'>קובץ מקסימלי עד 2 מגה</mat-error>
+                <mat-error *ngIf='CExceptionsCommittee?.errors?.["extensionNotValid"]'>סוג קובץ לא נתמך, יש להעלות
+                    תמונות או PDF בלבד</mat-error>
+            </mat-form-field>
+
+            <div *ngIf="getStatement1(CNeedyType.value)" class="statment">
+                <mat-checkbox formControlName="statement1"><span
+                        class="mat-checkbox-wrap-text">{{getStatement1(CNeedyType.value)}}</span></mat-checkbox>
+                <mat-error *ngIf='CStatement1?.errors'>חובה לסמן הצהרה זו</mat-error>
+            </div>
+
+            <div *ngIf="getStatement2(CNeedyType.value)" class="statment">
+                <mat-checkbox formControlName="statement2"><span
+                        class="mat-checkbox-wrap-text">{{getStatement2(CNeedyType.value)}}</span></mat-checkbox>
+                <mat-error *ngIf='CStatement2?.errors'>חובה לסמן הצהרה זו</mat-error>
+            </div>
+
+            <div *ngIf="getStatement3(CNeedyType.value)" class="statment">
+                <mat-checkbox formControlName="statement3"><span
+                        class="mat-checkbox-wrap-text">{{getStatement3(CNeedyType.value)}}</span></mat-checkbox>
+                <mat-error *ngIf='CStatement3?.errors'>חובה לסמן הצהרה זו</mat-error>
+            </div>
+
+            <div *ngIf="CNeedyType.value == NeedyType.Young" class="bottom-message">
+                <div class="bold">
+                    הקונגרס יעניק לזכאים שובר קניה מסובסד לקנית חליפה או כובע שמחירם עד 900 ש"ח ב6 סניפי המקום הנכון
+                    <br />
+                    הבחור ישלם בחנויות רק 250 ש"ח כהשתתפות בקנית החליפה והכובע.
+                </div>
+                יהיה ניתן לממש את השובר במהלך חודש אדר ב' ב6 סניפי רשת "לונדון" ו"המקום הנכון" (ירושלים, ב"ב, מודיעין
+                עילית וכפר חב"ד)
+                <br />
+                וגם למכירות המיוחדות שיתקיימו אי"ה בערים בית-שמש, נתיבות-אופקים וצפת באדר ב'.
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <button mat-button [disabled]="!newNeedyForm.valid" color="primary" type="submit">שלח</button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,66 @@
+<div class="new-student-page">
+    <div class="logos-container">
+        <img src="assets/igud.png" alt="Logo">
+        <img src="assets/keter.png" alt="Logo">
+        <img src="assets/congress.png" alt="Logo">
+    </div>
+
+    <div class="title">
+        <p>הרשמה לקבלת סיוע לאברכים, פסח תשפ"ה</p>
+    </div>
+
+    <button *ngIf="isRegistryOpenToRabbi"
+        class="add-form-btn"
+        mat-raised-button 
+        color="primary"
+        (click)="addForm(FormSpecialTypes.synagogue)">
+        הגשת בקשה לגבאים ורבני קהילות
+    </button>
+    
+    <button *ngIf="isRegistryOpenToAvrech"
+        class="add-form-btn"
+        mat-raised-button 
+        color="primary"
+        (click)="addForm(FormSpecialTypes.avrech)">
+        הגשת בקשה לאברכים
+    </button>
+    
+    <button *ngIf="isRegistryOpenToYoung"
+        class="add-form-btn"
+        mat-raised-button 
+        color="primary"
+        (click)="addForm(FormSpecialTypes.young)">
+        הגשת בקשה לבחורי ישיבות
+    </button>
+    
+    <button class="add-form-btn" mat-raised-button color="primary" (click)="checkStatus()">בדיקת סטטוס</button>
+    
+    <button *ngIf="isCompleteDocsOpen"
+        class="add-form-btn"
+        mat-raised-button color="primary"
+         (click)="uploadFiles()">
+         השלמת מסמכים
+    </button>
+  
+    <!-- <div class="message-container">
+        יש להשלים מסמכים עד מוצאי שבת ה 2/3
+    </div> -->
+
+    <!-- <button
+        class="add-form-btn"
+        mat-raised-button color="primary"
+         (click)="updateEmail()">
+         השלמת כתובת אימייל לבחורי ישיבות
+    </button> -->
+
+    <button
+        class="add-form-btn"
+        mat-raised-button color="primary"
+         (click)="updateBankDetails()">
+         השלמת פרטי חשבון בנק
+    </button>
+
+    <div *ngIf="!isRegistryOpenToRabbi || !isRegistryOpenToAvrech || !isRegistryOpenToYoung" class="title">
+        <p>שימו לב, ההרשמה {{getCloseTypes()}} נסגרה לשנת תשפ"ה</p>
+    </div>
+</div>

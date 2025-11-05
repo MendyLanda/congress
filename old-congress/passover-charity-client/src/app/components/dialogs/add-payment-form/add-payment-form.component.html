@@ -1,0 +1,84 @@
+<div mat-dialog-title class="dialog-header">
+    <span class="title">תעד תשלום</span>
+    <span class="close-btn" (click)="closeDialog()">
+        <mat-icon>close</mat-icon>
+    </span>
+</div>
+
+<form dir="rtl" [formGroup]='newPaymentForm' (ngSubmit)='onSubmit()'>
+    <div class='form-group'>
+        <mat-form-field mat-form-field appearance="outline">
+            <mat-label>אופן התשלום</mat-label>
+            <mat-select matInput formControlName="type" required>
+                <mat-option>--</mat-option>
+                <mat-option *ngFor="let payment of paymentMethod" [value]="payment">
+                    {{payment}}
+                </mat-option>
+            </mat-select>
+            <mat-error *ngIf='CType.errors'>חובה לבחור אופן תשלום</mat-error>
+        </mat-form-field>
+
+        <mat-form-field *ngIf="CType.value == PaymentMethod.Card" class="form-field" appearance="outline">
+            <mat-label>מספר כרטיס</mat-label>
+            <input matInput placeholder="" formControlName="cardId">
+            <mat-error *ngIf='CAmount.errors'>יש להזין מספר כרטיס</mat-error>
+        </mat-form-field>
+  
+        <mat-form-field *ngIf="CType.value == PaymentMethod.Coupon" class="form-field" appearance="outline">
+            <mat-label>מספר שובר</mat-label>
+            <input matInput placeholder="" formControlName="couponNumber">
+            <mat-error *ngIf='CAmount.errors'>יש להזין מספר שובר</mat-error>
+        </mat-form-field>
+
+        <mat-form-field *ngIf="CType.value == PaymentMethod.checks" class="form-field" appearance="outline">
+            <mat-label>מספר שיק</mat-label>
+            <input matInput placeholder="" formControlName="couponNumber">
+            <mat-error *ngIf='CAmount.errors'>יש להזין מספר שיק</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label>סכום</mat-label>
+            <input *ngIf="CType.value != PaymentMethod.Card; else cardAmount" matInput placeholder=""
+                formControlName="amount">
+
+            <ng-template #cardAmount>
+                <mat-select matInput formControlName="amount" required>
+                    <mat-option>--</mat-option>
+                    <mat-option *ngFor="let amount of cardAmounts" [value]="amount">
+                        {{amount}}
+                    </mat-option>
+                </mat-select>
+            </ng-template>
+            <mat-error *ngIf='CAmount.errors'>יש להזין סכום</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>תאריך ביצוע התשלום</mat-label>
+            <input matInput [matDatepicker]="picker1" formControlName="date">
+            <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+            <mat-datepicker #picker1></mat-datepicker>
+        </mat-form-field>
+
+        <mat-checkbox formControlName="withReceiver">הוסף פרטי מקבל</mat-checkbox>
+
+        <ng-template [ngIf]="withReceiver == true">
+            <mat-form-field appearance="outline">
+                <mat-label>שם המקבל</mat-label>
+                <input matInput placeholder="" formControlName="receiver">
+                <mat-error *ngIf='CAmount.errors'>יש להזין מספר כרטיס</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>הוספת מסמך אישור / חתימה</mat-label>
+                <ngx-mat-file-input formControlName="receiverSignature"></ngx-mat-file-input>
+                <mat-error *ngIf='CReceiverSignature?.errors?.["maxContentSize"]'>קובץ מקסימלי עד 2 מגה</mat-error>
+                <mat-error *ngIf='CReceiverSignature?.errors?.["extensionNotValid"]'>סוג קובץ לא נתמך, יש להעלות תמונות או PDF בלבד</mat-error>
+                <mat-error *ngIf='CReceiverSignature?.errors'>יש לצרף קובץ</mat-error>
+            </mat-form-field>
+        </ng-template>
+    </div>
+
+    <div class="dialog-footer">
+        <button mat-button [disabled]="!newPaymentForm.valid" color="primary" type="submit">הוסף</button>
+    </div>
+</form>

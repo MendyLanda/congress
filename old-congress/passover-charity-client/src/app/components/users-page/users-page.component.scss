@@ -1,0 +1,30 @@
+.pending-users-container {
+    padding: 30px 0;
+
+    .no-pending-users {
+        color: gray;
+    }
+}
+
+.header {
+    font-size: x-large;
+    margin-bottom: 10px;
+    display: flex;
+    margin: auto;
+    align-items: center;
+
+    mat-icon {
+        color: #4051b5;
+    }
+}
+
+.all-users-container {
+    padding: 30px 0;
+
+    .add-user-btn {
+        border-radius: 55px;
+        margin: 15px;
+        font-size: 16px;
+        padding: 0px 12px;
+    }
+}

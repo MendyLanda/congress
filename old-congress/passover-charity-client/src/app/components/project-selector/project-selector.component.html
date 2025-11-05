@@ -1,0 +1,11 @@
+<div class="project-selector">
+
+    <mat-form-field mat-form-field appearance="standard">
+        <mat-select [(value)]="projectSelected" (valueChange)="onProjectChanged($event)" matInput required>
+            <mat-option *ngFor="let project of projects" [value]="project.id">
+                {{project.name}}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+
+</div>

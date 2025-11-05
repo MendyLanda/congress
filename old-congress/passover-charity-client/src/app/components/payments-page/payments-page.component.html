@@ -1,0 +1,10 @@
+<div class="container">
+    <div class="btn-section">
+        <div class="header">
+            <span >רשימת תשלומים</span>
+            <button mat-icon-button (click)="getDataTable()"><mat-icon>refresh</mat-icon></button>
+            <button mat-icon-button matTooltip="ייצא לאקסל" (click)="exportTable()"><mat-icon>cloud_download</mat-icon></button>
+        </div>
+    </div>
+    <app-payments-table #table [columns]="tableColumns" [data]="tableData"></app-payments-table>
+</div>

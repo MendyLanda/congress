@@ -1,0 +1,40 @@
+.new-student-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.message-container {
+    background: #e4e4e4;
+    padding: 11px;
+    font-size: large;
+    line-height: normal;
+    border-radius: 9px;
+    text-align: center;
+}
+
+.title {
+    font-size: x-large;
+    margin: 17px 0 42px 0;
+}
+
+.add-form-btn {
+    border-radius: 55px;
+    margin: 15px;
+    font-size: 20px;
+    padding: 3px 17px;
+}
+
+.logos-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    margin: 15px;
+
+    img {
+        height: 110px;
+        margin-right: 16px;
+    }
+}

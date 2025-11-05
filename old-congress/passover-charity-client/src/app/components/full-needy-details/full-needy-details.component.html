@@ -1,0 +1,182 @@
+<div *ngIf="fullDetails" class="details-container">
+    <div class="files-section">
+
+        <div *ngIf="fullDetails?.student; else noStudent">
+            <div class="student-details">
+                <div *ngIf="fullDetails.type != NeedyType.Young">
+                    <mat-icon (click)="editStudentDetails()">edit</mat-icon>
+                    <div class="student-header">פרטים נוספים:</div>
+                    <div class="student-text">
+                        <span>שם האישה: </span>
+                        <span>{{getWifeName(fullDetails?.student!)}}</span>
+                    </div>
+                    <div class="student-text">
+                        <span>תז האישה</span>
+                        <span> {{fullDetails?.student!.ssnWife}}</span>
+                    </div>
+
+                    <div *ngIf="fullDetails?.student!.studentChildren?.length" class="student-text">
+                        <span>{{isWelfareForm() ? "ילדים שהוכנסו לתיעוד (יתכן רק אלו שמעל גיל 18)": "ילדים"}}:</span>
+                    </div>
+
+                    <div *ngFor="let child of fullDetails?.student!.studentChildren || []" class="student-text">
+                        <div class="student-text">
+                            <span> {{child.name + ": " + child.ssn}}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="student-header" *ngIf="fullDetails.type == NeedyType.Young">פרטי הישיבה:</div>
+
+                <div class="student-text">
+                    <span *ngIf="fullDetails.type == NeedyType.Student">שם הכולל: </span>
+                    <span *ngIf="fullDetails.type == NeedyType.Rabbi">שם בית הכנסת: </span>
+                    <span *ngIf="fullDetails.type == NeedyType.Young">שם הישיבה: </span>
+                    <span> {{fullDetails?.student!.kollelName}}</span>
+                </div>
+
+                <div class="student-text" *ngIf="fullDetails?.student!.kollelType">
+                    <span *ngIf="fullDetails.type == NeedyType.Student">סוג הכולל: </span>
+                    <span *ngIf="fullDetails.type == NeedyType.Young">סוג הישיבה: </span>
+                    <span>{{fullDetails?.student!.kollelType}}</span>
+                </div>
+
+                <div *ngIf="fullDetails?.student?.headOfTheKollelName">
+                    <div class="student-sub-header" *ngIf="fullDetails.type == NeedyType.Student">פרטי ראש הכולל:</div>
+                    <div class="student-sub-header" *ngIf="fullDetails.type == NeedyType.Young">פרטי ראש הישיבה:</div>
+                    <div class="student-text">
+                        <span>שם: </span>
+                        <span>{{fullDetails?.student!.headOfTheKollelName}}</span>
+                    </div>
+                    <div class="student-text">
+                        <span>טלפון: </span>
+                        <span>{{fullDetails?.student!.headOfTheKollelPhone}}</span>
+                    </div>
+                </div>
+
+            </div>
+            <div class="student-details">
+                <div class="student-header">פרטי חשבון בנק:</div>
+                <div *ngIf="fullDetails?.bankNo">
+                    <span>בנק: {{fullDetails?.bankNo}}</span><br />
+                    <span>סניף: {{fullDetails?.bankBranchNo}}</span><br />
+                    <span>חשבון: {{fullDetails?.bankAccountNo}}</span><br />
+                    <span>({{fullDetails.bankNo}}-{{fullDetails?.bankBranchNo}}-{{fullDetails?.bankAccountNo}})</span>
+                </div>
+                <span *ngIf="!fullDetails?.bankNo">לא נמצאו פרטי חשבון בנק</span>
+            </div>
+        </div>
+
+        <ng-template #noStudent>
+            <div class="student-details">
+                <div *ngIf="!descriptionEditMode; else editDesc">
+                    <mat-icon (click)="descriptionEditMode = true">edit</mat-icon>
+                    <span class="student-sub-header">הערה:</span>
+                    {{fullDetails?.description || "אין הערות"}}
+                </div>
+                <ng-template #editDesc class="student-sub-header">
+                    <mat-icon (click)="descriptionEditMode = false">close</mat-icon>
+                    הערה: <input #desc class="desc-edit" [value]="fullDetails!.messages" type="text">
+                    <mat-icon class="save-desc-btn" (click)="updateDescription(desc.value)">save</mat-icon>
+                </ng-template>
+
+            </div>
+        </ng-template>
+
+        <div *ngIf="fullDetails.type == NeedyType.Young" class="student-details">
+            <span class="student-sub-header">כתובת אימייל:</span>
+            <br />
+            {{fullDetails?.email || "חסר במערכת"}}
+        </div>
+
+        <div class="student-details">
+            <div *ngIf="!messagesEditMode; else editDesc">
+                <mat-icon (click)="messagesEditMode = true">edit</mat-icon>
+                <span class="student-sub-header">הודעות:</span>
+                {{fullDetails?.messages || "אין הודעות"}}
+            </div>
+            <ng-template #editDesc class="student-sub-header">
+                <mat-icon (click)="messagesEditMode = false">close</mat-icon>
+                הערה: <input #messages class="desc-edit" [value]="fullDetails!.messages" type="text">
+                <mat-icon class="save-desc-btn" (click)="updateMessage(messages.value)">save</mat-icon>
+            </ng-template>
+        </div>
+
+        <div class="doc-header">מסמכים קיימים במערכת</div>
+        <div *ngFor="let doc of fullDetails?.documents || []" class="documents">
+            <div style="display: flex;">
+                <mat-icon class="attach_file">attach_file</mat-icon>
+                <div class="document-text" (click)="getDocument(doc.id, doc.fileName)">
+                    {{doc.fileName}}
+                </div>
+                <mat-icon class="delete_forever" click-stop-propagation (click)="deleteDocument(doc.id!)">delete_forever
+                </mat-icon>
+            </div>
+            <p>קובץ נוצר ב: {{doc.createdAt | date:'dd/MM/yyyy'}}</p>
+        </div>
+
+
+        <button mat-flat-button (click)="addDocument()">העלה מסמך חדש</button>
+    </div>
+
+    <div class="process-section">
+        <div class="process-header">היסטוריית המלצות:</div>
+
+        <div *ngFor="let rec of fullDetails?.recommendations || []" class="recommendation">
+            <div class="recommendation-text">המלצת <span class="bold-text">{{rec.recommenderType}}</span></div>
+            <div class="recommendation-text">{{getRecommenderName(rec)}}</div>
+            <div class="recommendation-text"><span>סכום: </span> <span class="bold-text">{{rec.sum}} ש"ח</span></div>
+            <div class="recommendation-text"><span>תאריך: </span> <span>{{rec.recommendDate | date:"shortDate"}}</span>
+            </div>
+            <hr>
+        </div>
+    </div>
+
+    <div class="payments-section">
+        <div class="payments-header">היסטוריית תשלומים:
+            <span class="sum-payments">(סה"כ שולם: {{getTotalAmounts()}} ש"ח)</span>
+        </div>
+
+        <div class="payment-list">
+            <div *ngFor="let payment of fullDetails?.payments || []" class="payment">
+                <hr>
+                <div class="payment-details">
+                    <mat-icon click-stop-propagation (click)="deletePayment(payment.id!)">delete_forever</mat-icon>
+
+                    <div class="payment-text">סוג תשלום <span class="bold-text">{{payment.type}}</span></div>
+                    <div *ngIf="payment.type == PaymentMethod.Coupon" class="payment-text">
+                        מספר שובר: <span>{{payment.serialNumber}}</span>
+                    </div>
+                    <div *ngIf="payment.type == PaymentMethod.checks" class="payment-text">
+                        מספר שיק: <span>{{payment.serialNumber}}</span>
+                    </div>
+                    <div *ngIf="payment.type == PaymentMethod.Card" class="payment-text">
+                        מספר כרטיס רץ: <span>{{payment.card?.cardId}}</span>
+                    </div>
+                    <div *ngIf="payment.type == PaymentMethod.Card" class="payment-text">
+                        מספר כרטיס: <span>{{getSerialNumber(payment)}}</span>
+                    </div>
+                    <div class="payment-text"> <span>סכום</span> <span class="bold-text"> {{payment.amount}} ש"ח</span>
+                    </div>
+                    <div class="payment-text"> <span>תאריך: </span> <span>{{payment.date | date:"shortDate"}}</span>
+                    </div>
+                    <div *ngIf="payment.receiver">
+                        <div class="payment-sub-header">פרטי מקבל התשלום:</div>
+                        <div class="payment-text"> <span>שם: </span> <span>{{payment.receiver}}</span></div>
+                        <div (click)="getReceiverSignature(payment.receiverSignatureDocId!)"
+                            class="download-payment-btn"> <span>הורד קובץ
+                                חתימה
+                            </span>
+                        </div>
+                    </div>
+                    <div class="payment-text">{{getUserEnter(payment)}}</div>
+                </div>
+            </div>
+
+            <button mat-flat-button color="primary" (click)="addPayment()">תעד תשלום חדש</button>
+        </div>
+    </div>
+</div>
+<div *ngIf="!fullDetails" class="loading-bar">
+    <mat-progress-bar mode="query"></mat-progress-bar>
+</div>

@@ -1,0 +1,103 @@
+<div class="table-container">
+    <!-- <button class="reset-filters-btn" mat-flat-button color="warn" (click)="resetFilters()">נקה הכל</button> -->
+
+    <mat-table dir="rtl" [dataSource]="dataSource" matSort (matSortChange)="announceSortChange($event)"
+        multiTemplateDataRows>
+
+        <!-- Data Column -->
+        <ng-container *ngFor="let column of columns" [matColumnDef]="column.key">
+            <mat-header-cell *matHeaderCellDef mat-sort-header class="table-header-text"
+                [sortActionDescription]="'מיין לפי ' + column.displayName">
+                {{column.displayName}} </mat-header-cell>
+            <div *ngIf="column.key != 'action'; else actionCol">
+                <mat-cell *matCellDef="let element"> {{element[column.key]}} </mat-cell>
+            </div>
+            <ng-template #actionCol>
+                <mat-cell *matCellDef="let element">
+                    <button mat-flat-button
+                        [color]='element.lastRecommender != userInfoService.userInfo!.role ? "primary" : "accent"'
+                        click-stop-propagation [disabled]="isRecommendationUpdateAllowed(element)"
+                        (click)="_needyAction(element)">
+                        {{getActionTitle(element)}}</button>
+                </mat-cell>
+            </ng-template>
+        </ng-container>
+
+        <ng-container matColumnDef="edit">
+            <mat-header-cell *matHeaderCellDef></mat-header-cell>
+            <mat-cell *matCellDef="let detail">
+                <button mat-icon-button matTooltip="עריכה" (click)="_editRow(detail)"
+                    [disabled]="isRecommendationUpdateAllowed(detail)" click-stop-propagation>
+                    <mat-icon>edit</mat-icon>
+                </button>
+            </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="delete">
+            <mat-header-cell *matHeaderCellDef></mat-header-cell>
+            <mat-cell *matCellDef="let detail">
+                <button mat-icon-button matTooltip="מחיקה" (click)="_deleteRow(detail)"
+                    [disabled]="isRecommendationUpdateAllowed(detail)" click-stop-propagation>
+                    <mat-icon>delete_forever</mat-icon>
+                </button>
+            </mat-cell>
+        </ng-container>
+
+        <!-- Filter Column -->
+        <ng-container class="column-filter-field" *ngFor="let filter of filterSelectObj"
+            [matColumnDef]="filter.columnProp + '-filter'">
+            {{filter.filterBy}}
+
+            <mat-header-cell *matHeaderCellDef>
+                <div class="filter-field" *ngIf="filter.type != null">
+                    <mat-form-field>
+                        <mat-label>סנן לפי {{filter.name}}</mat-label>
+
+                        <mat-select *ngIf="filter.type == TableFilterType.options" [(value)]="filter.filterBy"
+                            (selectionChange)="filterChange()">
+                            <mat-option value="">הכל</mat-option>
+                            <mat-option [value]="item" *ngFor="let item of filter.options">{{item}}</mat-option>
+                        </mat-select>
+
+                        <input *ngIf="filter.type == TableFilterType.freeText" [(ngModel)]="filter.filterBy"
+                            (ngModelChange)="filterChange()" matInput>
+
+                    </mat-form-field>
+                    <mat-icon class="cancel-filter" (click)='resetFilter(filter)'>cancel</mat-icon>
+                </div>
+            </mat-header-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="edit-filter" class="column-filter-field">
+            <mat-header-cell *matHeaderCellDef class="mat-column-edit"></mat-header-cell>
+        </ng-container>
+        <ng-container matColumnDef="delete-filter" class="column-filter-field">
+            <mat-header-cell *matHeaderCellDef class="mat-column-edit"></mat-header-cell>
+        </ng-container>
+
+        <!-- Expanded Column -->
+        <ng-container matColumnDef="expandedDetail">
+            <mat-cell *matCellDef="let element">
+                <div *ngIf="element == expandedElement" class="element-detail">
+                    <app-full-needy-details [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'"
+                        [needy]="element">
+                    </app-full-needy-details>
+                </div>
+            </mat-cell>
+        </ng-container>
+
+
+        <mat-header-row matRipple *matHeaderRowDef="displayedColumns" class="table-header"></mat-header-row>
+        <mat-header-row *matHeaderRowDef="displayedColumnFilters" class="table-filter-header"></mat-header-row>
+
+        <mat-row matRipple (click)="toggleExpanded(element)" class="element-row"
+            [ngClass]="{'include-cards': !!element.payments, 'on-reject': isRejectNeedy(element)}"
+            [class.expanded-row]="expandedElement === element"
+            *matRowDef="let element; columns: displayedColumns;"></mat-row>
+
+        <mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></mat-row>
+    </mat-table>
+
+    <mat-paginator dir="rtl" [pageSizeOptions]="[7, 14, 21, 50, 100]" showFirstLastButtons
+        aria-label="Select page of periodic elements">
+    </mat-paginator>
+</div>

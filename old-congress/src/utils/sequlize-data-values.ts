@@ -1,0 +1,1 @@
+export const gatDataValues = any => any.dataValues; 

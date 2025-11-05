@@ -1,0 +1,11 @@
+<div mat-dialog-title class="dialog-header">
+    <span class="title">הוספת מסמך</span>
+    <span class="close-btn" (click)="closeDialog()">
+        <mat-icon>close</mat-icon>
+    </span>
+</div>
+<div class="dialog-container">
+    <input type="file" accept="image/*,.pdf" (change)="uploadFile($event)">
+    <button mat-flat-button color="primary" (click)="closeDialog()">העלה</button>
+    <div class="warning">{{error}}</div>
+</div>

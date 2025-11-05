@@ -1,0 +1,168 @@
+<div mat-dialog-title class="dialog-header">
+    <span class="title">רישום משתמש חדש</span>
+    <span class="close-btn" (click)="closeDialog()">
+        <mat-icon>close</mat-icon>
+    </span>
+</div>
+<div class="dialog-container">
+    <form dir="rtl" [formGroup]='newUserForm' (ngSubmit)='onSubmit()' enctype="multipart/form-data">
+        <div *ngIf="!signInMode" class='form-row-group'>
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label>סוג משתמש</mat-label>
+                <mat-select formControlName="type" required>
+                    <mat-option>--</mat-option>
+                    <mat-option *ngFor="let type of userTypes" [value]="type">
+                        {{type}}
+                    </mat-option>
+                </mat-select>
+                <mat-error *ngIf='CType.errors'>יש לבחור סוג משתמש</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class='form-row-group'>
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label>שם משתמש חדש</mat-label>
+                <input matInput placeholder="" formControlName="username">
+                <mat-error *ngIf='CUsername.errors'>יש לבחור שם משתמש באורך 8-12 תווים באנגלית ומספרים ללא רווחים</mat-error>
+                <mat-error *ngIf='CUsername.errors?.["usernameTaken"]'>שם משתמש תפוס</mat-error>
+                <mat-error *ngIf='CUsername.errors?.["serverError"]'>בעיה באימות מול השרת</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label> סיסמה חדשה</mat-label>
+                <input type="password" matInput placeholder="" formControlName="password">
+                <mat-error *ngIf='CPassword.errors'>יש לבחור סיסמה באורך 8-12 תווים באנגלית ומספרים</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label>אימות סיסמה</mat-label>
+                <input type="password" matInput placeholder="" formControlName="passwordApprove">
+                <mat-error *ngIf='CPasswordApprove.errors'>יש להזין שוב את הסיסמה</mat-error>
+                <mat-error *ngIf='CPasswordApprove.errors?.["passwordDoesNotMatch"]'>סיסמאות אינן תואמות</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class='form-row-group'>
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label>שם פרטי</mat-label>
+                <input matInput placeholder="" formControlName="firstName">
+                <mat-error *ngIf='CFirstName.errors'>נא להזין שם פרטי</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label>שם משפחה</mat-label>
+                <input matInput placeholder="" formControlName="lastName">
+                <mat-error *ngIf='CLastName.errors'>נא להזין שם משפחה</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="form-field" appearance="outline">
+                <mat-label>מספר טלפון</mat-label>
+                <input matInput placeholder="" formControlName="phone">
+                <mat-error *ngIf='CPhone.errors'>נא להזין מספר טלפון תקין</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div *ngIf="signInMode || CType.value == UserRole.coordinator">
+            <div class='form-row-group'>
+                <mat-form-field class="form-field" appearance="outline">
+                    <mat-label>מספר זהות</mat-label>
+                    <input matInput placeholder="" formControlName="ssn">
+                    <mat-error *ngIf='CSsn.errors'>נא להזין מספר זהות תקין עם 9 ספרות, אם מספר הזהות קצר יותר יש להוסיף 0-ים בתחילת המספר</mat-error>
+                </mat-form-field>
+
+                <mat-form-field class="form-field" appearance="outline">
+                    <mat-label>עיר</mat-label>
+                    <input matInput placeholder="" formControlName="city">
+                    <mat-error *ngIf='CCity.errors'>נא להזין שם עיר</mat-error>
+                </mat-form-field>
+
+                <mat-form-field class="form-field" appearance="outline">
+                    <mat-label>כתובת מגורים</mat-label>
+                    <input matInput placeholder="" formControlName="address">
+                    <mat-error *ngIf='CAddress.errors'>נא להזין כתובת</mat-error>
+                </mat-form-field>
+            </div>
+
+            <div class='form-row-group'>
+                <mat-form-field class="form-field" appearance="outline">
+                    <mat-label>שם הארגון</mat-label>
+                    <input matInput placeholder="" formControlName="organizationName">
+                    <mat-error *ngIf='CFirstName.errors'>נא להזין שם תקין בעברית</mat-error>
+                </mat-form-field>
+
+                <mat-form-field class="form-field" appearance="outline">
+                    <mat-label>כתובת הארגון</mat-label>
+                    <input matInput placeholder="" formControlName="organizationAddress">
+                    <mat-error *ngIf='CLastName.errors'>נא להזין כתובת תקינה</mat-error>
+                </mat-form-field>
+
+                <mat-form-field class="form-field" appearance="outline">
+                    <mat-label>עיר הארגון</mat-label>
+                    <input matInput placeholder="" formControlName="organizationCity">
+                    <mat-error *ngIf='CPhone.errors'>נא להזין עיר</mat-error>
+                </mat-form-field>
+            </div>
+
+            <div class='form-row-group'>
+                <mat-form-field class="form-field" appearance="outline">
+                    <mat-label>סוג הארגון</mat-label>
+                    <mat-select formControlName="organizationType" required>
+                        <mat-option>--</mat-option>
+                        <mat-option *ngFor="let type of organizationTypes" [value]="type">
+                            {{type}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error *ngIf='CCity.errors'>יש לבחור סוג ארגון</mat-error>
+                </mat-form-field>
+
+                <mat-form-field class="form-field" appearance="outline">
+                    <mat-label>מספר ארגון</mat-label>
+                    <input matInput placeholder="" formControlName="organizationNo">
+                    <mat-error *ngIf='CAddress.errors'>נא להזין מסר ארגון</mat-error>
+                </mat-form-field>
+            </div>
+
+            
+            <div class="sub-tilie-form">חברי ועדה מקומית</div>
+
+            <div formArrayName="committeePersons">
+                <div *ngFor="let committeePerson of CCommitteePersons.controls; index as i;">
+                    <div [formGroupName]="i" class='form-row-group'>
+                        <mat-form-field class="form-field" appearance="outline">
+                            <mat-label>שם חבר ועדה</mat-label>
+                            <input matInput placeholder="" formControlName="name">
+                            <mat-error *ngIf='CCommitteePersons.controls[i].get("name")?.errors'>נא להזין שם תקין בעברית</mat-error>
+                        </mat-form-field>
+                        
+                        <mat-form-field class="form-field" appearance="outline">
+                            <mat-label>טלפון</mat-label>
+                            <input matInput placeholder="" formControlName="phone">
+                            <mat-error *ngIf='CCommitteePersons.controls[i].get("phone")?.errors'>נא להזין טלפון</mat-error>
+                        </mat-form-field>
+
+                        <mat-form-field class="form-field" appearance="outline">
+                            <mat-label>מספר זהות</mat-label>
+                            <input matInput placeholder="" formControlName="ssn">
+                            <mat-error *ngIf='CCommitteePersons.controls[i].get("ssn")?.errors'>נא להזין תז תקינה</mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label>רישום לפרוייקט</mat-label>
+            <mat-select formControlName="projectId" required>
+                <mat-option>--</mat-option>
+                <mat-option *ngFor="let project of projects" [value]="project.id">
+                    {{project.name}}
+                </mat-option>
+            </mat-select>
+            <mat-error *ngIf='CProjectId.errors'>יש לבחור פרוייקט מתוך הרשימה</mat-error>
+        </mat-form-field>
+
+        <div class="dialog-footer">
+            <button mat-button [disabled]="!newUserForm.valid" color="primary" type="submit">שלח</button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,33 @@
+.dialog-header {
+    background-color: #121212;
+    color: white;
+    display: flex;
+    direction: rtl;
+    justify-content: space-between;
+    margin: -24px -24px 24px -24px;
+    padding: 13px;
+    position: sticky;
+    top: -24px;
+    z-index: 999;
+
+    .title {
+        font-size: large;
+        margin: auto 0;
+        text-align: right;
+    }
+
+    .close-btn {
+        cursor: pointer;
+    }
+}
+
+form {
+    .form-field {
+        margin: 7px;
+    }
+}
+
+.dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+}

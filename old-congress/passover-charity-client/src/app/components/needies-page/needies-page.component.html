@@ -1,0 +1,13 @@
+<div class="container">
+    <div class="btn-section">
+        <div class="header">
+            <span >רשימת נתמכים</span>
+            <button mat-icon-button (click)="getDataTable()"><mat-icon>refresh</mat-icon></button>
+            <button mat-icon-button matTooltip="ייצא לאקסל" (click)="exportTable()"><mat-icon>cloud_download</mat-icon></button>
+        </div>
+        <button class="add-form-btn" mat-raised-button color="primary" (click)="addForm()" [disabled]="!(userInfoService.$userInfo | async)?.canCreate">הוסף רשומה</button>
+    </div>
+    <app-needies-table [columns]="tableColumns" [data]="tableData" #table
+    (editRow)="editNeedy($event)"(deleteRow)="deleteNeedy($event)"
+    (needyAction)="needyAction($event)"></app-needies-table>
+</div>

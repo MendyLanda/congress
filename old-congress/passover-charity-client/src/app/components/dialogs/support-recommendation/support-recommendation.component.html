@@ -1,0 +1,33 @@
+<div dir="rtl" class="dialog-container">
+    <div class="dialog-header">{{headerTitle}}</div>
+
+    <mat-form-field appearance="outline">
+        <mat-label>סכום</mat-label>
+        <input matInput [(ngModel)]="supportAmount">
+    </mat-form-field>
+
+    <div *ngIf="isManager">
+        <div *ngIf="duplicateSSN.length > 1" class="duplicate-ssn">
+            <mat-icon>warning</mat-icon>
+            <span>שים לב: תעודת זהות {{ssn}} כבר קיימת במערכת</span>
+            <button mat-button color="accent" (click)="showDuplicateSSN()">הצג כפילות</button>
+        </div>
+
+        <div class="add-messages-container">
+            <div *ngFor="let message of messagesList; let i = index">
+                <mat-checkbox (change)="updateSelectedMessages(i, $event)">{{message}}</mat-checkbox>
+            </div>
+
+        </div>
+
+        <div class="dialog-footer">
+            <button mat-button [mat-dialog-close]="supportAmount" color="accent" type="button" (click)="onReject()">
+                דחיית בקשה</button>
+        </div>
+    </div>
+
+    <div class="dialog-footer">
+        <button mat-button [mat-dialog-close]="supportAmount" color="primary" type="submit" (click)="onApprove()">
+            אישור המלצה</button>
+    </div>
+</div>

@@ -1,0 +1,14 @@
+<app-loader></app-loader>
+<app-header></app-header>
+
+<nav *ngIf="(authService.$isLogin | async) && isManager" class="tabs" mat-tab-nav-bar [tabPanel]="tabPanel">
+    <a mat-tab-link *ngFor="let link of links" (click)="goTo(link)" [active]="activeLink == link"> {{link.displayName}}
+    </a>
+</nav>
+
+<div class="main-container">
+    <mat-tab-nav-panel #tabPanel>
+        <router-outlet></router-outlet>
+    </mat-tab-nav-panel>
+    <app-project-selector *ngIf="(authService.$isLogin | async) && isManager" class="app-project-selector"></app-project-selector>
+</div>

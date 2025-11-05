@@ -1,0 +1,18 @@
+@use "../styles.scss";
+
+.tabs {
+    margin: 0 styles.$margin-horizontal;
+    top: 93px;
+    position: sticky;
+}
+
+.main-container {
+    margin: 0 styles.$margin-horizontal;
+    overflow-y: auto;
+}
+
+.app-project-selector {
+    position: absolute;
+    top: 90px;
+    left: 3vw;
+}

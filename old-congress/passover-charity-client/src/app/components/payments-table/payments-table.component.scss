@@ -1,0 +1,71 @@
+.table-container {
+    border: 7px solid #f3f3f3;
+    border-radius: 10px;
+    box-shadow: none;
+    max-height: 70vh;
+    overflow: auto;
+}
+
+mat-table {
+    display: flex;
+    flex-direction: column;
+}
+
+.table-header-text {
+    display: flex;
+    font-size: large;
+    font-weight: bold;
+}
+
+.table-header {
+    position: sticky;
+    top: 0;
+    z-index: 99;
+}
+
+.table-filter-header {
+    position: sticky;
+    top: 56px;
+    z-index: 99;
+}
+
+.cancel-filter {
+    color: #8b8b8b;
+    font-size: 19px;
+    cursor: pointer;
+    vertical-align: -6px;
+}
+
+.reset-filters-btn {
+    position: absolute;
+    left: calc(3vw + 5px);
+    margin-top: 64px;
+}
+
+.filter-field {
+    mat-form-field {
+        width:6.5vw;
+    }
+}
+
+.mat-column-action,
+.mat-column-action-filter {
+    flex: 0.6;
+}
+
+.mat-column-accept,
+.mat-column-decline {
+    flex: 0.3;
+
+    mat-icon {
+        cursor: pointer;
+    }
+}
+
+.accept-btn{
+    color: #28ac28;
+}
+
+.decline-btn{
+    color: #ba0000;
+}

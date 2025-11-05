@@ -1,0 +1,14 @@
+<div class="header-container">
+    <div class="header-line">
+        <div class="heder-section">
+            <img src="assets/logo2023.png" alt="Logo">
+            <span class="system-name">קמחא דפסחא</span>
+        </div>
+        <div *ngIf="authService.$isLogin | async" class="heder-section">
+            <span class="user-info">{{getUserTitle()}}</span>
+            <button class="sign-out-btn" mat-icon-button (click)="authService.logout()">
+                <mat-icon>exit_to_app</mat-icon>
+            </button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,51 @@
+<div dir="rtl" class="dialog-container">
+    <div class="dialog-header">השלמת פרטי חשבון בנק</div>
+    <form dir="rtl" [formGroup]='updateBankDetailsForm' (ngSubmit)='onSubmit()'>
+
+        <div>יש להשתמש בטופס זה רק אם קיבלתם הודעה על השלמת פרטי חשבון בנק</div>
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label>מספר זהות</mat-label>
+            <input matInput placeholder="" formControlName="ssn">
+            <mat-error *ngIf='CSsn.errors'>נא להזין מספר זהות תקין עם 9 ספרות, אם מספר הזהות קצר יותר יש להוסיף 0-ים בתחילת המספר</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label>מזהה בקשה</mat-label>
+            <input matInput placeholder="" formControlName="needyId">
+            <mat-hint>מספר הזיהוי של הבקשה שנמסר בעת הרישום</mat-hint>
+            <mat-error *ngIf='CNeedyId.errors'>נא להזין מזהה</mat-error>
+        </mat-form-field>
+
+        <br />
+    
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label>מספר בנק</mat-label>
+            <input matInput placeholder="" formControlName="bankNo">
+            <mat-hint>קוד הבנק כפי שהוא מופיע בפרטי החשבון</mat-hint>
+            <mat-error *ngIf='CBankNo.errors'>נא להזין מספר בנק תקין</mat-error>
+        </mat-form-field>
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label>מספר סניף</mat-label>
+            <input matInput placeholder="" formControlName="bankBranchNo">
+            <mat-error *ngIf='CBankBranchNo.errors'>נא להזין מספר סניף תקין</mat-error>
+        </mat-form-field>
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label>מספר חשבון</mat-label>
+            <input matInput placeholder="" formControlName="bankAccountNo">
+            <mat-error *ngIf='CBankAccountNo.errors'>נא להזין מספר חשבון בנק תקין</mat-error>
+        </mat-form-field>
+
+        <br />
+
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label>אישור ניהול חשבון או צילום שיק</mat-label>
+            <ngx-mat-file-input formControlName="document"></ngx-mat-file-input>
+            <mat-error *ngIf='CDocument?.errors?.["maxContentSize"]'>קובץ מקסימלי עד 2 מגה</mat-error>
+            <mat-error *ngIf='CDocument?.errors?.["extensionNotValid"]'>סוג קובץ לא נתמך, יש להעלות תמונות או PDF בלבד</mat-error>
+        </mat-form-field>
+
+        <div class="dialog-footer">
+            <button mat-button [disabled]="!updateBankDetailsForm.valid" color="primary" type="submit">שליחה</button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,44 @@
+image: node:latest 
+
+stages:
+  # - build
+  - staging
+  - production
+
+# build: 
+#   image: node:16-alpine
+#   stage: build
+#   script:
+#     - sh build.sh
+#   # artifacts:
+  #   paths:
+  #     - passover-charity-server
+  # cache:
+  #   key:
+  #     files:
+  #       - passover-charity-server/package-lock.json
+  #   paths:
+  #     - passover-charity-server/node_modules
+  #   policy: pull
+  
+staging:
+  stage: staging
+  image: ruby:latest
+  script:
+   - apt-get update -qy
+   - apt-get install -y ruby-dev
+   - gem install dpl
+   - dpl --provider=heroku --app=$HEROKU_APP_STAGING --api-key=$HEROKU_API_KEY
+  only:
+    - staging
+
+production:
+  stage: production
+  image: ruby:latest
+  script:
+   - apt-get update -qy
+   - apt-get install -y ruby-dev
+   - gem install dpl
+   - dpl --provider=heroku --app=$HEROKU_APP_PRODUCTION --api-key=$HEROKU_API_KEY
+  only:
+    - master

@@ -1,0 +1,26 @@
+.container {
+}
+
+.header {
+    font-size: x-large;
+    padding-top: 30px;
+    padding-right: 5px;
+    display: flex;
+    align-items: center;
+
+    mat-icon {
+        color: #4051b5;
+    }
+}
+
+.btn-section {
+    display: flex;
+    justify-content: space-between;
+}
+
+.add-form-btn {
+    border-radius: 55px;
+    margin: 15px;
+    font-size: 20px;
+    padding: 3px 17px;
+}

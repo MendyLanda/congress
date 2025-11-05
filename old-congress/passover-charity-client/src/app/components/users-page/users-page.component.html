@@ -1,0 +1,28 @@
+<div class="container">
+
+    <div class="pending-users-container">
+        <div class="header">
+            <div>אישור משתמשים חדשים</div>
+            <button mat-icon-button (click)="getUsersData()"><mat-icon>refresh</mat-icon></button>
+        </div>
+        <app-users-table *ngIf="pendingTableData.length; else noPendingUser" [columns]="pendingTableColumns"
+            [data]="pendingTableData" [approveMode]="true" (approveUser)="approveUser($event)"
+            (declineUser)="declineUser($event)"></app-users-table>
+        <ng-template #noPendingUser>
+            <span class="no-pending-users">
+                אין משתמשים חדשים המחכים לאישור
+            </span>
+        </ng-template>
+    </div>
+    <hr>
+    <div class="all-users-container">
+        <div class="header">
+            <div>כל המשתמשים במערכת</div>
+            <button mat-icon-button matTooltip="ייצא לאקסל" (click)="exportTable()"><mat-icon>cloud_download</mat-icon></button>
+            <button class="add-user-btn" mat-raised-button color="primary" (click)="addUser()">הוסף משתמש חדש</button>
+        </div>
+        <app-users-table #allUsersTable [columns]="activeTableColumns" [data]="activeTableData" (declineUser)="declineUser($event)"
+        (updateUserCanCreate)="updateUserCanCreate($event)">
+        </app-users-table>
+    </div>
+</div>

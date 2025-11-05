@@ -1,0 +1,75 @@
+<div matSort (matSortChange)="announceSortChange($event)" class="table-container">
+    <!-- <button class="reset-filters-btn" mat-flat-button color="warn" (click)="resetFilters()">נקה הכל</button> -->
+
+    <mat-table dir="rtl" [dataSource]="dataSource">
+
+        <!-- Data Column -->
+        <ng-container *ngFor="let column of columns" [matColumnDef]="column.key" sticky>
+            <mat-header-cell class="table-header-text" *matHeaderCellDef mat-sort-header
+                [sortActionDescription]="'מיין לפי ' + column.displayName">
+                {{column.displayName}}
+            </mat-header-cell>
+            <mat-cell *matCellDef="let element">{{element[column.key]}}</mat-cell>
+        </ng-container>
+
+        <!-- <ng-container *ngIf="approveMode" matColumnDef="accept">
+            <mat-header-cell *matHeaderCellDef></mat-header-cell>
+            <mat-cell *matCellDef="let detail">
+                <mat-icon class="accept-btn" click-stop-propagation matTooltip="אישור משתמש"
+                    (click)="_approveUser(detail)">check</mat-icon>
+            </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="decline">
+            <mat-header-cell *matHeaderCellDef></mat-header-cell>
+            <mat-cell *matCellDef="let detail">
+                <mat-icon class="decline-btn" click-stop-propagation matTooltip="מחיקת משתמש"
+                    (click)="_declineUser(detail)">close</mat-icon>
+            </mat-cell>
+        </ng-container> -->
+
+        <!-- Filter Column -->
+        <ng-container class="column-filter-field" *ngFor="let filter of filterSelectObj" sticky
+            [matColumnDef]="filter.columnProp + '-filter'">
+            {{filter.filterBy}}
+
+            <mat-header-cell *matHeaderCellDef>
+                <div class="filter-field" *ngIf="filter.type != null">
+                    <mat-form-field>
+                        <mat-label>סנן לפי {{filter.name}}</mat-label>
+
+                        <mat-select *ngIf="filter.type == TableFilterType.options" [(value)]="filter.filterBy"
+                            (selectionChange)="filterChange()">
+                            <mat-option value="">הכל</mat-option>
+                            <mat-option [value]="item" *ngFor="let item of filter.options">{{item}}</mat-option>
+                        </mat-select>
+
+                        <input *ngIf="filter.type == TableFilterType.freeText" [(ngModel)]="filter.filterBy"
+                            (ngModelChange)="filterChange()" matInput>
+
+                    </mat-form-field>
+                    <mat-icon class="cancel-filter" (click)='resetFilter(filter)'>cancel</mat-icon>
+                </div>
+            </mat-header-cell>
+
+        </ng-container>
+
+
+        <!-- <ng-container *ngIf="approveMode" matColumnDef="accept-filter" class="column-filter-field">
+            <mat-header-cell *matHeaderCellDef class="mat-column-accept"></mat-header-cell>
+        </ng-container>
+        <ng-container matColumnDef="decline-filter" class="column-filter-field">
+            <mat-header-cell *matHeaderCellDef class="mat-column-decline"></mat-header-cell>
+        </ng-container> -->
+
+
+        <mat-header-row *matHeaderRowDef="displayedColumns" class="table-header"></mat-header-row>
+        <mat-header-row *matHeaderRowDef="displayedColumnFilters" class="table-filter-header"></mat-header-row>
+
+        <mat-row matRipple *matRowDef="let row; columns: displayedColumns;"></mat-row>
+
+    </mat-table>
+
+    <mat-paginator dir="rtl" [pageSizeOptions]="[7, 14, 21]" showFirstLastButtons
+        aria-label="Select page of periodic elements">
+    </mat-paginator>
+</div>

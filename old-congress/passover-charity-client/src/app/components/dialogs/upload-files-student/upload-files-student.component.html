@@ -1,0 +1,42 @@
+<div dir="rtl" class="dialog-container">
+    <div class="dialog-header">השלמת מסמכים</div>
+    <form dir="rtl" [formGroup]='uploadFileFrom' (ngSubmit)='onSubmit()'>
+
+        <div>יש להשתמש בטופס זה רק במקרה וקיבלתם הודעה על השלמת מסמכים</div>
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label>מספר זהות</mat-label>
+            <input matInput placeholder="" formControlName="ssn">
+            <mat-error *ngIf='CSsn.errors'>נא להזין מספר זהות תקין עם 9 ספרות, אם מספר הזהות קצר יותר יש להוסיף 0-ים בתחילת המספר</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label>מזהה בקשה</mat-label>
+            <input matInput placeholder="" formControlName="needyId">
+            <mat-hint>מספר הזיהוי של הבקשה שנמסר בעת הרישום</mat-hint>
+            <mat-error *ngIf='CNeedyId.errors'>נא להזין מזהה</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="outline">
+            <mat-label>מסמך מצורף</mat-label>
+            <ngx-mat-file-input formControlName="document"></ngx-mat-file-input>
+            <mat-error *ngIf='CDocument?.errors?.["maxContentSize"]'>קובץ מקסימלי עד 2 מגה</mat-error>
+            <mat-error *ngIf='CDocument?.errors?.["extensionNotValid"]'>סוג קובץ לא נתמך, יש להעלות
+                תמונות או PDF בלבד</mat-error>
+        </mat-form-field>
+
+        <div class="statment">
+            <mat-checkbox formControlName="statement1" >בסימון זה אני מאשר שאני אברך / בחור המשתייך לעדה הבוכרית הלומד יום שלם.</mat-checkbox>
+            <mat-error *ngIf='CStatement1?.errors'>חובה לסמן הצהרה זו</mat-error>
+        </div>
+
+        <div class="statment">
+            <mat-checkbox formControlName="statement2" >בסימון זה אני מאשר שאני מודע לכך שאקבל את מתנת החג רק אם אשתתף בעצמי בכינוס "כתר תורה"<br/>
+                 לכבודה של תורה.</mat-checkbox>
+            <mat-error *ngIf='CStatement2?.errors'>חובה לסמן הצהרה זו</mat-error>
+        </div>
+     
+        <div class="dialog-footer">
+            <button mat-button [disabled]="!uploadFileFrom.valid" color="primary" type="submit">שליחה</button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,186 @@
+.details-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.files-section {
+    flex: 1;
+    max-width: 200px;
+    margin-left: 30px;
+    padding: 15px 0;
+
+    .student-details {
+        border: 1px solid #c9c9c9;
+        padding: 14px;
+        border-radius: 10px;
+        margin: 0 0 18px;
+
+        mat-icon {
+            float: left;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .student-header {
+            font-weight: 800;
+            font-size: larger;
+            margin-bottom: 6px;
+        }
+
+        .student-sub-header {
+            font-weight: 700;
+            font-size: initial;
+            margin: 12px 0 2px 0;
+        }
+    }
+
+    .desc-edit {
+        border-color: gray;
+        border: 1px solid #d4d4d4;
+        border-radius: 7px;
+        padding: 4px;
+    }
+
+    .save-desc-btn {
+        margin-top: -20px;
+    }
+
+    .doc-header {
+        font-size: large;
+        font-weight: 600;
+        margin: 7px 2px;
+    }
+
+    .documents {
+        display: flex;
+        margin: 8px 0;
+        flex-direction: column;
+
+        .attach_file {
+            margin-top: 5px;
+        }
+
+        .delete_forever {
+            cursor: pointer;
+            font-size: medium;
+            color: #830303;
+        }
+
+        .document-text {
+            padding: 5px 12px;
+            border-radius: 8px;
+            text-align: center;
+            line-height: 25px;
+            background: #50c1c6;
+            color: white;
+            cursor: pointer;
+            max-width: 138px;
+        }
+    }
+}
+
+.process-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 200px;
+    margin: 0 15px;
+    padding: 15px 0;
+
+    .process-header {
+        font-size: large;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .recommendation {
+        margin: 5px 0;
+
+        .recommendation-text {
+            line-height: 23px;
+        }
+    }
+}
+
+.payments-section {
+    flex: 2;
+    margin: 0 15px;
+    margin: 10px;
+    border: 2px solid #50c1c6;
+    padding: 10px 15px;
+    border-radius: 10px;
+
+    mat-icon {
+        cursor: pointer;
+        font-size: medium;
+        float: left;
+        color: #830303;
+    }
+
+    .payment-list {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .payments-header {
+        font-size: large;
+        font-weight: 600;
+        margin-bottom: 5px;
+
+        .sum-payments {
+            font-size: smaller;
+        }
+    }
+
+    .payment {
+        max-width: 200px;
+        background-color: #edfeff;
+        display: flex;
+        flex-direction: column;
+        margin: 13px;
+        margin-right: 0;
+
+        hr {
+            border-top: 1px solid #50c1c6;
+            width: 100%;
+            margin-top: 0;
+        }
+
+        .payment-details {
+            padding: 0 10px;
+        }
+
+        .payment-text {
+            line-height: 23px;
+        }
+
+        .payment-sub-header {
+            font-weight: 700;
+            margin: 12px 0 2px 0;
+        }
+
+        .download-payment-btn {
+            color: #34868a;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 7px 0;
+        }
+    }
+
+    button {
+        align-self: flex-start;
+        margin: 13px;
+    }
+}
+
+.bold-text {
+    font-size: larger;
+    font-weight: 600;
+    margin: 0 3px;
+}
+
+.loading-bar {
+    height: 40px;
+    display: flex;
+    align-items: center;
+}

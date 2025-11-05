@@ -1,0 +1,22 @@
+<form class="form-container" [formGroup]="loginForm" (ngSubmit)="onSubmit()" dir="rtl">
+    <h1>כניסת משתמש</h1>
+
+    <mat-form-field appearance="outline">
+        <mat-label>שם משתמש</mat-label>
+        <input matInput placeholder="" formControlName="username">
+        <mat-error *ngIf='username.errors'>יש להכניס שם</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+        <mat-label>סיסמה</mat-label>
+        <input type='password' matInput placeholder="" formControlName="password">
+        <mat-error *ngIf='password.errors'>יש להכניס סיסמה</mat-error>
+    </mat-form-field>
+
+    <button class='submit-btn' mat-raised-button color="primary" type="submit"
+        [disabled]="!loginForm.valid">התחבר</button>
+
+    <div (click)="addUserForm()" class="sign-in">
+        הרשמה למשתמש חדש
+    </div>
+</form>
