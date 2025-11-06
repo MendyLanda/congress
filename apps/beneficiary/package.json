@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm with-env vite dev",
+    "dev:i18n:extract": "i18next-cli extract --watch",
+    "dev:i18n:types": "i18next-cli types --watch",
     "build": "vite build",
     "start": "vite start",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
@@ -50,6 +52,7 @@
     "@types/react-dom": "catalog:react19",
     "@vitejs/plugin-react": "catalog:",
     "eslint": "catalog:",
+    "i18next-cli": "catalog:",
     "prettier": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",

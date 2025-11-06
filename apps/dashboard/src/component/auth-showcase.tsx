@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@acme/ui/button";
 import { Field, FieldContent, FieldGroup, FieldLabel } from "@acme/ui/field";
@@ -9,6 +10,7 @@ import { toast } from "@acme/ui/toast";
 import { authClient } from "~/auth/client";
 
 export function AuthShowcase() {
+  const { t } = useTranslation();
   const { data: session } = authClient.useSession();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -21,7 +23,7 @@ export function AuthShowcase() {
         <FieldGroup>
           <Field>
             <FieldContent>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <FieldLabel htmlFor="email">{t("email")}</FieldLabel>
             </FieldContent>
             <Input
               id="email"
@@ -34,7 +36,7 @@ export function AuthShowcase() {
           </Field>
           <Field>
             <FieldContent>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
+              <FieldLabel htmlFor="password">{t("password")}</FieldLabel>
             </FieldContent>
             <Input
               id="password"
@@ -63,13 +65,13 @@ export function AuthShowcase() {
                 await navigate({ href: "/", replace: true });
               }
             } catch {
-              toast.error("Failed to sign in");
+              toast.error(t("failed_to_sign_in"));
             } finally {
               setIsLoading(false);
             }
           }}
         >
-          {isLoading ? "Signing in..." : "Sign in"}
+          {isLoading ? t("signing_in") : t("sign_in")}
         </Button>
       </div>
     );
@@ -78,7 +80,7 @@ export function AuthShowcase() {
   return (
     <div className="flex flex-col items-center justify-center gap-4">
       <p className="text-center text-2xl">
-        <span>Logged in as {session.user.name}</span>
+        <span>{t("logged_in_as", { name: session.user.name })}</span>
       </p>
 
       <Button
@@ -88,7 +90,7 @@ export function AuthShowcase() {
           await navigate({ href: "/", replace: true });
         }}
       >
-        Sign out
+        {t("sign_out")}
       </Button>
     </div>
   );

@@ -6,6 +6,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import type { RouterOutputs } from "@acme/api";
 import { CreatePostSchema } from "@acme/db/schema";
@@ -36,11 +37,12 @@ export const Route = createFileRoute("/")({
 });
 
 function RouteComponent() {
+  const { t } = useTranslation();
   return (
     <main className="container h-screen py-16">
       <div className="flex flex-col items-center justify-center gap-4">
         <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-          Create <span className="text-primary">T3</span> Turbo
+          {t("create_t3_turbo")}
         </h1>
         <AuthShowcase />
 
@@ -56,7 +58,7 @@ function RouteComponent() {
             }
           >
             {DISABLE_POST_LIST ? (
-              <div>Post list is disabled</div>
+              <div>{t("post_list_is_disabled")}</div>
             ) : (
               <PostList />
             )}
@@ -68,6 +70,7 @@ function RouteComponent() {
 }
 
 function CreatePostForm() {
+  const { t } = useTranslation();
   const trpc = useTRPC();
 
   const queryClient = useQueryClient();
@@ -80,8 +83,8 @@ function CreatePostForm() {
       onError: (err) => {
         toast.error(
           err.data?.code === "UNAUTHORIZED"
-            ? "You must be logged in to post"
-            : "Failed to create post",
+            ? t("failed_to_create_post")
+            : t("you_must_be_logged_in_to_post"),
         );
       },
     }),
@@ -115,7 +118,7 @@ function CreatePostForm() {
             return (
               <Field data-invalid={isInvalid}>
                 <FieldContent>
-                  <FieldLabel htmlFor={field.name}>Bug Title</FieldLabel>
+                  <FieldLabel htmlFor={field.name}>{t("bug_title")}</FieldLabel>
                 </FieldContent>
                 <Input
                   id={field.name}
@@ -124,7 +127,7 @@ function CreatePostForm() {
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   aria-invalid={isInvalid}
-                  placeholder="Title"
+                  placeholder={t("bug_title")}
                 />
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
@@ -139,7 +142,9 @@ function CreatePostForm() {
             return (
               <Field data-invalid={isInvalid}>
                 <FieldContent>
-                  <FieldLabel htmlFor={field.name}>Content</FieldLabel>
+                  <FieldLabel htmlFor={field.name}>
+                    {t("bug_content")}
+                  </FieldLabel>
                 </FieldContent>
                 <Input
                   id={field.name}
@@ -148,7 +153,7 @@ function CreatePostForm() {
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   aria-invalid={isInvalid}
-                  placeholder="Content"
+                  placeholder={t("bug_content")}
                 />
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
@@ -156,13 +161,14 @@ function CreatePostForm() {
           }}
         />
       </FieldGroup>
-      <Button type="submit">Create</Button>
+      <Button type="submit">{t("create_post")}</Button>
     </form>
   );
 }
 
 function PostList() {
   const trpc = useTRPC();
+  const { t } = useTranslation();
   const { data: posts } = useSuspenseQuery(trpc.post.all.queryOptions());
 
   if (posts.length === 0) {
@@ -173,7 +179,7 @@ function PostList() {
         <PostCardSkeleton pulse={false} />
 
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10">
-          <p className="text-2xl font-bold text-white">No posts yet</p>
+          <p className="text-2xl font-bold text-white">{t("no_posts_yet")}</p>
         </div>
       </div>
     );
@@ -190,6 +196,7 @@ function PostList() {
 
 function PostCard(props: { post: RouterOutputs["post"]["all"][number] }) {
   const trpc = useTRPC();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const deletePost = useMutation(
     trpc.post.delete.mutationOptions({
@@ -199,8 +206,8 @@ function PostCard(props: { post: RouterOutputs["post"]["all"][number] }) {
       onError: (err) => {
         toast.error(
           err.data?.code === "UNAUTHORIZED"
-            ? "You must be logged in to delete a post"
-            : "Failed to delete post",
+            ? t("you_must_be_logged_in_to_delete_a_post")
+            : t("failed_to_delete_post"),
         );
       },
     }),
@@ -218,7 +225,7 @@ function PostCard(props: { post: RouterOutputs["post"]["all"][number] }) {
           className="text-primary cursor-pointer text-sm font-bold uppercase hover:bg-transparent hover:text-white"
           onClick={() => deletePost.mutate(props.post.id)}
         >
-          Delete
+          {t("delete_post")}
         </Button>
       </div>
     </div>

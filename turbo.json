@@ -14,6 +14,16 @@
       "cache": false,
       "persistent": false
     },
+    "dev:i18n:extract": {
+      "dependsOn": ["^dev"],
+      "cache": false,
+      "persistent": false
+    },
+    "dev:i18n:types": {
+      "dependsOn": ["^dev"],
+      "cache": false,
+      "persistent": false
+    },
     "format": {
       "outputs": [".cache/.prettiercache"],
       "outputLogs": "new-only"
