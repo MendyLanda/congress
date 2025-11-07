@@ -1,5 +1,5 @@
 {
-  "name": "@acme/legacy-db",
+  "name": "@congress/legacy-db",
   "private": true,
   "type": "module",
   "exports": {
@@ -24,14 +24,14 @@
     "postgres": "^3.4.7"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@congress/eslint-config": "workspace:*",
+    "@congress/prettier-config": "workspace:*",
+    "@congress/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "drizzle-kit": "^0.31.5",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@congress/prettier-config"
 }

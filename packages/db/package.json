@@ -1,5 +1,5 @@
 {
-  "name": "@acme/db",
+  "name": "@congress/db",
   "private": true,
   "type": "module",
   "exports": {
@@ -32,7 +32,7 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@acme/validators": "workspace:*",
+    "@congress/validators": "workspace:*",
     "drizzle-orm": "^0.44.7",
     "drizzle-zod": "^0.8.3",
     "postgres": "^3.4.7",
@@ -40,14 +40,14 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@congress/eslint-config": "workspace:*",
+    "@congress/prettier-config": "workspace:*",
+    "@congress/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "drizzle-kit": "^0.31.5",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@congress/prettier-config"
 }

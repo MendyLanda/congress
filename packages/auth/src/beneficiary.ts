@@ -1,15 +1,14 @@
 import { randomBytes } from "node:crypto";
-import { compare, hash } from "bcryptjs";
-import { SignJWT } from "jose";
-
-import { and, createID, eq, gt, isNull } from "@acme/db";
-import { db } from "@acme/db/client";
+import { and, createID, eq, gt, isNull } from "@congress/db";
+import { db } from "@congress/db/client";
 import {
   BeneficiaryAccount,
   BeneficiaryOTP,
   BeneficiaryPasswordReset,
   BeneficiarySession,
-} from "@acme/db/schema";
+} from "@congress/db/schema";
+import { compare, hash } from "bcryptjs";
+import { SignJWT } from "jose";
 
 import { authEnv } from "../env";
 

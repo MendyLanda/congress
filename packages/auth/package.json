@@ -1,5 +1,5 @@
 {
-  "name": "@acme/auth",
+  "name": "@congress/auth",
   "private": true,
   "type": "module",
   "exports": {
@@ -32,7 +32,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@acme/db": "workspace:*",
+    "@congress/db": "workspace:*",
     "@t3-oss/env-core": "^0.13.8",
     "bcryptjs": "^3.0.3",
     "better-auth": "catalog:",
@@ -40,14 +40,14 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
     "@better-auth/cli": "catalog:",
+    "@congress/eslint-config": "workspace:*",
+    "@congress/prettier-config": "workspace:*",
+    "@congress/tsconfig": "workspace:*",
     "@types/bcryptjs": "^2.4.6",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@congress/prettier-config"
 }

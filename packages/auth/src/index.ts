@@ -1,10 +1,9 @@
 import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
+import { createID } from "@congress/db";
+import { db } from "@congress/db/client";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin } from "better-auth/plugins";
-
-import { createID } from "@acme/db";
-import { db } from "@acme/db/client";
 
 const database = drizzleAdapter(db, {
   provider: "pg",

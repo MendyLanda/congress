@@ -1,7 +1,4 @@
 import type { TRPCRouterRecord } from "@trpc/server";
-import { TRPCError } from "@trpc/server";
-import { z } from "zod/v4";
-
 import {
   createOTP,
   createPasswordResetToken,
@@ -17,11 +14,13 @@ import {
   verifyOTP,
   verifyPassword,
   verifyPasswordResetToken,
-} from "@acme/auth/beneficiary";
-import { createID, eq } from "@acme/db";
-import { db } from "@acme/db/client";
-import { BeneficiaryAccount, Person, PersonContact } from "@acme/db/schema";
-import { sendVoiceOTP } from "@acme/transactional/twilio";
+} from "@congress/auth/beneficiary";
+import { createID, eq } from "@congress/db";
+import { db } from "@congress/db/client";
+import { BeneficiaryAccount, Person, PersonContact } from "@congress/db/schema";
+import { sendVoiceOTP } from "@congress/transactional/twilio";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod/v4";
 
 import { publicProcedure } from "../trpc";
 

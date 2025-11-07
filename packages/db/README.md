@@ -1,4 +1,4 @@
-# Database Package (@acme/db)
+# Database Package (@congress/db)
 
 Technical documentation for the Congress Beneficiary Management System database schema. This package contains all database table definitions, relationships, and type exports using Drizzle ORM with PostgreSQL.
 

@@ -1,3 +1,4 @@
+import type { AppRouter } from "@congress/api";
 import {
   createTRPCClient,
   httpBatchStreamLink,
@@ -5,8 +6,6 @@ import {
 } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
 import SuperJSON from "superjson";
-
-import type { AppRouter } from "@acme/api";
 
 import { env } from "~/env";
 import { getAuthToken } from "./beneficiary-auth";

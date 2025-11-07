@@ -1,5 +1,5 @@
 {
-  "name": "@acme/dashboard",
+  "name": "@congress/dashboard",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -15,11 +15,11 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@acme/api": "workspace:*",
-    "@acme/auth": "workspace:*",
-    "@acme/db": "workspace:*",
-    "@acme/s3": "workspace:*",
-    "@acme/ui": "workspace:*",
+    "@congress/api": "workspace:*",
+    "@congress/auth": "workspace:*",
+    "@congress/db": "workspace:*",
+    "@congress/s3": "workspace:*",
+    "@congress/ui": "workspace:*",
     "@fontsource-variable/geist": "^5.2.8",
     "@fontsource-variable/geist-mono": "^5.2.7",
     "@t3-oss/env-core": "^0.13.8",
@@ -44,10 +44,10 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tailwind-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@congress/eslint-config": "workspace:*",
+    "@congress/prettier-config": "workspace:*",
+    "@congress/tailwind-config": "workspace:*",
+    "@congress/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
@@ -61,5 +61,5 @@
     "vite": "catalog:",
     "vite-tsconfig-paths": "^5.1.4"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@congress/prettier-config"
 }
