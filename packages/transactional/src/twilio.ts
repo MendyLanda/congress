@@ -29,12 +29,10 @@ export async function sendVoiceOTP({
   const fromNumber = env.TWILIO_PHONE_NUMBER;
 
   // In development, just log the code
-  if (process.env.NODE_ENV === "development" || !accountSid || !authToken) {
-    console.log(
-      `[DEV] OTP code for ${to}: ${code}. In production, this would be sent via Twilio voice call.`,
-    );
-    return;
-  }
+  console.log(
+    `[DEV] OTP code for ${to}: ${code}. In production, this would be sent via Twilio voice call.`,
+  );
+  return;
 
   if (!fromNumber) {
     throw new Error("TWILIO_PHONE_NUMBER environment variable is not set");
