@@ -18,6 +18,8 @@ import { Toaster } from "@congress/ui/toast";
 import { setSSRLanguage } from "~/lib/i18n";
 import appCss from "~/styles.css?url";
 
+import "@fontsource-variable/";
+
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
   trpc: TRPCOptionsProxy<AppRouter>;
