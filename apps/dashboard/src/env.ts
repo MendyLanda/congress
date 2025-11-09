@@ -3,11 +3,10 @@ import { vercel } from "@t3-oss/env-core/presets-zod";
 import { z } from "zod/v4";
 
 import { authEnv } from "@congress/auth/env";
-import { s3Env } from "@congress/s3/env";
 
 export const env = createEnv({
   clientPrefix: "VITE_",
-  extends: [authEnv(), s3Env(), vercel()],
+  extends: [authEnv(), vercel()],
   shared: {
     NODE_ENV: z
       .enum(["development", "production", "test"])

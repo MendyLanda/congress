@@ -18,6 +18,7 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
+    "@better-upload/server": "^3.0.0",
     "@congress/auth": "workspace:*",
     "@congress/db": "workspace:*",
     "@congress/transactional": "workspace:*",

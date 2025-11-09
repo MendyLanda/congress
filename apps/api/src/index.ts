@@ -3,6 +3,7 @@ import { trpcServer } from "@hono/trpc-server"; // Deno 'npm:@hono/trpc-server'
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
+import { betterUploadRouter, handleBetterUploadRequest } from "./better-upload";
 import { dashboardAuth } from "./dashboard-auth";
 import { isProd } from "./is-prod";
 import { appRouter } from "./root";
@@ -58,8 +59,8 @@ app.use(
   }),
 );
 
-app.get("/health", (c) => {
-  return c.json({ status: "ok" });
+app.post("/upload", (c) => {
+  return handleBetterUploadRequest(c.req.raw, betterUploadRouter);
 });
 
 export default app;
