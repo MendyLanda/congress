@@ -26,6 +26,9 @@ export const Route = createRootRouteWithContext<{
     await setSSRLanguage();
   },
   head: () => ({
+    meta: [
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
+    ],
     links: [{ rel: "stylesheet", href: appCss }],
   }),
   component: RootComponent,
