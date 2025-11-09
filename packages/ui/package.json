@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./dropdrawer": "./src/components/dropdrawer.tsx",
     "./accordion": "./src/components/accordion.tsx",
     "./alert": "./src/components/alert.tsx",
     "./alert-dialog": "./src/components/alert-dialog.tsx",

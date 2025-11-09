@@ -10,8 +10,10 @@
     "cssVariables": true
   },
   "aliases": {
-    "utils": "@congress/ui",
-    "components": "src/",
-    "ui": "src/"
+    "components": "src/components",
+    "utils": "src/lib/utils",
+    "hooks": "src/hooks",
+    "lib": "src/lib",
+    "ui": "src/components"
   }
 }
