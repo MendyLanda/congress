@@ -223,7 +223,7 @@ export const createRLSDBClient = <T extends DbClient>(db: T): T => {
           const whereFn = fn.invoke as WhereFn;
           const whereArgs = fn.args as WhereArgs;
 
-          const [table] = fnPath.findLast((x) => x.name === "from")
+          const [table] = [...fnPath].reverse().find((x) => x.name === "from")
             ?.args as FromArgs as [Table];
 
           const policy = getPolicy(table);
@@ -302,7 +302,7 @@ export const createRLSDBClient = <T extends DbClient>(db: T): T => {
           const setFn = fn.invoke as SetFn;
           const setArgs = fn.args as SetArgs;
 
-          const [table] = fnPath.findLast((x) => x.name === "update")
+          const [table] = [...fnPath].reverse().find((x) => x.name === "update")
             ?.args as UpdateArgs as [Table];
 
           const policy = getPolicy(table);
@@ -366,7 +366,7 @@ export const createRLSDBClient = <T extends DbClient>(db: T): T => {
           const whereFn = fn.invoke as WhereFn;
           const whereArgs = fn.args as WhereArgs;
 
-          const [table] = fnPath.findLast((x) => x.name === "delete")
+          const [table] = [...fnPath].reverse().find((x) => x.name === "delete")
             ?.args as DeleteArgs as [Table];
 
           const policy = getPolicy(table);
