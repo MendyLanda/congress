@@ -16,9 +16,7 @@ export const env = createEnv({
   client: {
     VITE_API_URL: z.url(),
   },
-  server: {
-    BENEFICIARY_APP_URL: z.url(),
-  },
+  server: {},
   runtimeEnv: {
     ...import.meta.env,
     ...process.env,

@@ -1,5 +1,3 @@
-import { env } from "~/env";
-
 export const getCorsHeaders = (origin: string) => {
   return new Headers({
     "Access-Control-Allow-Origin": origin,
@@ -14,10 +12,13 @@ export const createHandlerWithCors = (
   handler: (request: Request) => Promise<Response>,
 ) => {
   return async (request: Request) => {
+    throw new Error(
+      "To use this middleware, add an acceptable origins environment variable and compare the origin to it",
+    );
     const response = await handler(request);
     const origin = request.headers.get("origin");
-    if (origin && origin === env.BENEFICIARY_APP_URL) {
-      const corsHeaders = getCorsHeaders(origin);
+    if (origin) {
+      const corsHeaders = getCorsHeaders(origin ?? "");
       for (const [key, value] of corsHeaders.entries()) {
         response.headers.set(key, value);
       }
@@ -27,11 +28,14 @@ export const createHandlerWithCors = (
 };
 
 export const corsOptionsHandler = (request: Request) => {
+  throw new Error(
+    "To use this middleware, add an acceptable origins environment variable and compare the origin to it",
+  );
   const origin = request.headers.get("origin");
-  if (origin && origin === env.BENEFICIARY_APP_URL) {
+  if (origin) {
     return new Response(null, {
       status: 204,
-      headers: getCorsHeaders(origin),
+      headers: getCorsHeaders(origin ?? ""),
     });
   }
   return new Response(null, { status: 204 });
