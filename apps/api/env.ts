@@ -5,7 +5,7 @@ import { z } from "zod/v4";
 export const apiEnv = () => {
   return createEnv({
     extends: [vercel()],
-    clientPrefix: "__",
+    clientPrefix: "__", // https://github.com/t3-oss/t3-env/issues/151
     client: {},
     server: {
       NODE_ENV: z.enum(["development", "production"]).optional(),
