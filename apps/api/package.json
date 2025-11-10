@@ -35,7 +35,6 @@
     "@congress/eslint-config": "workspace:*",
     "@congress/prettier-config": "workspace:*",
     "@congress/tsconfig": "workspace:*",
-    "@types/bun": "^1.3.2",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
