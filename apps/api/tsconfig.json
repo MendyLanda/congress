@@ -1,11 +1,13 @@
 {
-  "extends": "@congress/tsconfig/compiled-package.json",
   "compilerOptions": {
-    "types": ["bun"],
-    "lib": ["ES2022", "DOM"],
-    "outDir": "./dist",
-    "jsxImportSource": "hono/jsx"
+    "target": "ESNext",
+    "module": "NodeNext",
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    "outDir": "./dist"
   },
-  "include": ["src", "env.ts"],
   "exclude": ["node_modules"]
 }
