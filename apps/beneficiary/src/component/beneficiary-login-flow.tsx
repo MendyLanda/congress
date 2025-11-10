@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
+import type { RouterOutputs } from "@congress/api/types";
 import { Button } from "@congress/ui/button";
 import {
   Field,
@@ -13,7 +14,7 @@ import {
 import { Input } from "@congress/ui/input";
 import { toast } from "@congress/ui/toast";
 
-import { setAuthToken } from "~/lib/beneficiary-auth";
+import { useBeneficiaryAuth } from "~/lib/beneficiary-auth-provider";
 import { useTRPC } from "~/lib/trpc";
 
 type LoginStep = "nationalId" | "password" | "otp" | "setPassword" | "signup";
@@ -22,6 +23,7 @@ export function BeneficiaryLoginFlow() {
   const { t } = useTranslation();
   const trpc = useTRPC();
   const navigate = useNavigate();
+  const { refetchSession } = useBeneficiaryAuth();
   const [step, setStep] = useState<LoginStep>("nationalId");
   const [nationalId, setNationalId] = useState("");
   const [password, setPassword] = useState("");
@@ -32,14 +34,29 @@ export function BeneficiaryLoginFlow() {
     null,
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [shouldCheckAccount, setShouldCheckAccount] = useState(false);
 
-  // Check account status when national ID is entered
-  const { data: accountStatus, isFetching: isCheckingAccount } = useQuery(
-    trpc.beneficiaryAuth.checkNationalId.queryOptions(
-      { nationalId },
-      { enabled: shouldCheckAccount && !!nationalId.trim() },
-    ),
+  type CheckNationalIdResult =
+    RouterOutputs["beneficiaryAuth"]["checkNationalId"];
+
+  // Check account status mutation
+  const checkNationalIdMutation = useMutation(
+    trpc.beneficiaryAuth.checkNationalId.mutationOptions({
+      onSuccess: (data: CheckNationalIdResult) => {
+        if (!data.exists) {
+          // No account exists, show signup form
+          setStep("signup");
+        } else if (data.hasPassword) {
+          // Account exists with password, show password input
+          setStep("password");
+        } else {
+          // Account exists but no password, send OTP
+          void sendOTPMutation.mutate({ nationalId });
+        }
+      },
+      onError: (error: { message?: string }) => {
+        toast.error(error.message || t("failed_to_check_account"));
+      },
+    }),
   );
 
   const sendOTPMutation = useMutation(
@@ -61,11 +78,9 @@ export function BeneficiaryLoginFlow() {
   const verifyOTPMutation = useMutation(
     trpc.beneficiaryAuth.verifyOTPAndSetPassword.mutationOptions({
       onSuccess: async (data) => {
-        if (data.token) {
-          setAuthToken(data.token);
-          toast.success(data.message);
-          await navigate({ href: "/", replace: true });
-        }
+        toast.success(data.message);
+        await refetchSession();
+        await navigate({ href: "/", replace: true });
       },
       onError: (error: { message?: string }) => {
         toast.error(error.message || t("invalid_verification_code"));
@@ -75,12 +90,10 @@ export function BeneficiaryLoginFlow() {
 
   const loginMutation = useMutation(
     trpc.beneficiaryAuth.login.mutationOptions({
-      onSuccess: async (data) => {
-        if (data.token) {
-          setAuthToken(data.token);
-          toast.success(t("logged_in_successfully"));
-          await navigate({ href: "/", replace: true });
-        }
+      onSuccess: async () => {
+        toast.success(t("logged_in_successfully"));
+        await refetchSession();
+        await navigate({ href: "/", replace: true });
       },
       onError: (error: { message?: string }) => {
         toast.error(error.message || t("invalid_credentials"));
@@ -91,11 +104,9 @@ export function BeneficiaryLoginFlow() {
   const signupMutation = useMutation(
     trpc.beneficiaryAuth.signup.mutationOptions({
       onSuccess: async (data) => {
-        if (data.token) {
-          setAuthToken(data.token);
-          toast.success(data.message);
-          await navigate({ href: "/", replace: true });
-        }
+        toast.success(data.message);
+        await refetchSession();
+        await navigate({ href: "/", replace: true });
       },
       onError: (error: { message?: string }) => {
         toast.error(error.message || t("failed_to_create_account"));
@@ -103,30 +114,18 @@ export function BeneficiaryLoginFlow() {
     }),
   );
 
-  const handleNationalIdSubmit = () => {
+  const handleNationalIdSubmit = async () => {
     if (!nationalId.trim()) {
       toast.error(t("please_enter_national_id"));
       return;
     }
-    setShouldCheckAccount(true);
-  };
-
-  // Handle account status check result using useEffect
-  React.useEffect(() => {
-    if (shouldCheckAccount && accountStatus) {
-      setShouldCheckAccount(false);
-      if (!accountStatus.exists) {
-        // No account exists, show signup form
-        setStep("signup");
-      } else if (accountStatus.hasPassword) {
-        // Account exists with password, show password input
-        setStep("password");
-      } else {
-        // Account exists but no password, send OTP
-        void sendOTPMutation.mutate({ nationalId });
-      }
+    setIsLoading(true);
+    try {
+      await checkNationalIdMutation.mutateAsync({ nationalId });
+    } finally {
+      setIsLoading(false);
     }
-  }, [shouldCheckAccount, accountStatus, nationalId, sendOTPMutation]);
+  };
 
   const handlePasswordSubmit = async () => {
     if (!password.trim()) {
@@ -221,7 +220,7 @@ export function BeneficiaryLoginFlow() {
               value={nationalId}
               onChange={(e) => setNationalId(e.target.value)}
               placeholder={t("enter_national_id")}
-              disabled={isLoading || isCheckingAccount}
+              disabled={isLoading || checkNationalIdMutation.isPending}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   void handleNationalIdSubmit();
@@ -232,10 +231,12 @@ export function BeneficiaryLoginFlow() {
         </FieldGroup>
         <Button
           size="lg"
-          disabled={isLoading || isCheckingAccount}
-          onClick={handleNationalIdSubmit}
+          disabled={isLoading || checkNationalIdMutation.isPending}
+          onClick={() => void handleNationalIdSubmit()}
         >
-          {isLoading || isCheckingAccount ? t("checking") : t("continue")}
+          {isLoading || checkNationalIdMutation.isPending
+            ? t("checking")
+            : t("continue")}
         </Button>
       </div>
     );

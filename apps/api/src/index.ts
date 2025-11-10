@@ -15,23 +15,7 @@ const devOrigins = ["http://localhost:3001", "http://localhost:3002"];
 const app = new Hono();
 
 app.use(
-  "/api/auth/*", // or replace with "*" to enable cors for all routes
-  cors({
-    origin: isProd ? prodOrigins : devOrigins,
-    allowHeaders: ["Content-Type", "Authorization"],
-    allowMethods: ["POST", "GET", "OPTIONS"],
-    exposeHeaders: ["Content-Length"],
-    maxAge: 600,
-    credentials: true,
-  }),
-);
-
-app.on(["POST", "GET"], "/auth/*", (c) => {
-  return dashboardAuth.handler(c.req.raw);
-});
-
-app.use(
-  "/trpc/*",
+  "*",
   cors({
     origin: isProd ? prodOrigins : devOrigins,
     allowHeaders: [
@@ -45,12 +29,20 @@ app.use(
     maxAge: 600,
     credentials: true,
   }),
+);
+
+app.on(["POST", "GET"], "/auth/*", (c) => {
+  return dashboardAuth.handler(c.req.raw);
+});
+
+app.use(
+  "/trpc/*",
   trpcServer({
     router: appRouter,
     createContext(_, c) {
       return createTRPCContext({
         auth: dashboardAuth,
-        headers: c.req.raw.headers,
+        hono: c,
       });
     },
     onError({ error, path }) {

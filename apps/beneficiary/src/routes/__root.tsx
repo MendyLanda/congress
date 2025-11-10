@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import type { AppRouter } from "@congress/api/types";
 import { Toaster } from "@congress/ui/toast";
 
+import { BeneficiaryAuthProvider } from "~/lib/beneficiary-auth-provider";
 import { setSSRLanguage } from "~/lib/i18n";
 import appCss from "~/styles.css?url";
 
@@ -37,7 +38,9 @@ export const Route = createRootRouteWithContext<{
 function RootComponent() {
   return (
     <RootDocument>
-      <Outlet />
+      <BeneficiaryAuthProvider>
+        <Outlet />
+      </BeneficiaryAuthProvider>
     </RootDocument>
   );
 }

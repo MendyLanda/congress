@@ -6,7 +6,9 @@
  * tl;dr - this is where all the tRPC server stuff is created and plugged in.
  * The pieces you will need to use are documented accordingly near the end
  */
+import type { Context as HonoContext } from "hono";
 import { initTRPC, TRPCError } from "@trpc/server";
+import { getCookie } from "hono/cookie";
 import superjson from "superjson";
 import { z, ZodError } from "zod/v4";
 
@@ -40,13 +42,13 @@ const getSession = async (
  */
 
 export const createTRPCContext = async (opts: {
-  headers: Headers;
   auth: DashboardAuth;
+  hono: HonoContext;
 }) => {
-  const session = await getSession(opts.auth, opts.headers);
+  const session = await getSession(opts.auth, opts.hono.req.raw.headers);
   return {
     session,
-    headers: opts.headers,
+    hono: opts.hono,
   };
 };
 /**
@@ -115,11 +117,11 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
 /**
  * Protected procedure for beneficiary users
  *
- * Verifies JWT token from Authorization header and ensures account is approved
+ * Verifies JWT token from cookie and ensures account is approved
  */
 export const beneficiaryProtectedProcedure = t.procedure.use(
   async ({ ctx, next }) => {
-    const token = ctx.headers.get("authorization")?.replace("Bearer ", "");
+    const token = getCookie(ctx.hono, "congress_bat");
 
     if (!token) {
       throw new TRPCError({

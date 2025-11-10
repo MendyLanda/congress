@@ -24,7 +24,7 @@ import { Input } from "@congress/ui/input";
 import { toast } from "@congress/ui/toast";
 
 import { BeneficiaryLoginFlow } from "~/component/beneficiary-login-flow";
-import { getAuthToken, removeAuthToken } from "~/lib/beneficiary-auth";
+import { useBeneficiaryAuth } from "~/lib/beneficiary-auth-provider";
 import { useTRPC } from "~/lib/trpc";
 
 const DISABLE_POST_LIST = true as boolean;
@@ -40,31 +40,17 @@ export const Route = createFileRoute("/")({
 
 function RouteComponent() {
   const { t } = useTranslation();
-  const trpc = useTRPC();
-  const token = getAuthToken();
+  const { session, isLoading, signOut } = useBeneficiaryAuth();
 
-  // Check session if token exists
-  const { data: session } = useQuery(
-    trpc.beneficiaryAuth.getSession.queryOptions(undefined, {
-      enabled: !!token,
-      retry: false,
-    }),
-  );
-
-  const logoutMutation = useMutation(
-    trpc.beneficiaryAuth.logout.mutationOptions({
-      onSuccess: () => {
-        removeAuthToken();
-        window.location.reload();
-      },
-    }),
-  );
-
-  // If no token or no valid session, show login
-  if (!token || !session) {
+  // If loading or no valid session, show login
+  if (isLoading || !session) {
     return (
       <main className="container flex h-screen items-center justify-center py-16">
-        <BeneficiaryLoginFlow />
+        {isLoading ? (
+          <div>{t("loading")}</div>
+        ) : (
+          <BeneficiaryLoginFlow />
+        )}
       </main>
     );
   }
@@ -80,7 +66,7 @@ function RouteComponent() {
           <Button
             variant="ghost"
             onClick={() => {
-              logoutMutation.mutate();
+              void signOut();
             }}
           >
             {t("logout")}

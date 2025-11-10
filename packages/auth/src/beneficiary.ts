@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { compare, hash } from "bcryptjs";
-import { SignJWT } from "jose";
+import { jwtVerify, SignJWT } from "jose";
 
 import { and, createID, eq, gt, isNull } from "@congress/db";
 import { db } from "@congress/db/client";
@@ -61,7 +61,6 @@ export async function verifySessionToken(token: string): Promise<{
   accountId: string;
 } | null> {
   try {
-    const { jwtVerify } = await import("jose");
     const secret = new TextEncoder().encode(JWT_SECRET);
     const { payload } = await jwtVerify(token, secret);
 

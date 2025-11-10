@@ -1,5 +1,7 @@
 import type { TRPCRouterRecord } from "@trpc/server";
+import type { Context as HonoContext } from "hono";
 import { TRPCError } from "@trpc/server";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { z } from "zod/v4";
 
 import {
@@ -24,6 +26,25 @@ import { BeneficiaryAccount, Person, PersonContact } from "@congress/db/schema";
 import { sendVoiceOTP } from "@congress/transactional/twilio";
 
 import { publicProcedure } from "../trpc";
+
+const BENEFICIARY_AUTH_COOKIE_NAME = "congress_bat"; // congress beneficiary auth token
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days in seconds
+
+function setAuthCookie(ctx: { hono: HonoContext }, token: string) {
+  setCookie(ctx.hono, BENEFICIARY_AUTH_COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Lax",
+    maxAge: COOKIE_MAX_AGE,
+    path: "/",
+  });
+}
+
+function deleteAuthCookie(ctx: { hono: HonoContext }) {
+  deleteCookie(ctx.hono, BENEFICIARY_AUTH_COOKIE_NAME, {
+    path: "/",
+  });
+}
 
 function maskPhoneNumber(phoneNumber: string): string {
   if (!phoneNumber) return "05*****00";
@@ -113,7 +134,7 @@ export const beneficiaryAuthRouter = {
    */
   checkNationalId: publicProcedure({ captcha: false })
     .input(z.object({ nationalId: nationalIdSchema }))
-    .query(async ({ input }) => {
+    .mutation(async ({ input }) => {
       const account = await db.query.BeneficiaryAccount.findFirst({
         where: eq(BeneficiaryAccount.nationalId, input.nationalId),
       });
@@ -156,7 +177,7 @@ export const beneficiaryAuthRouter = {
 
       // Generate and store OTP
       const code = await createOTP(account.id, {
-        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
+        ipAddress: ctx.hono.req.raw.headers.get("x-forwarded-for") ?? undefined,
       });
 
       // Send OTP via Twilio
@@ -216,14 +237,16 @@ export const beneficiaryAuthRouter = {
       // Create session and log in
       const token = await createSessionToken(account.id);
       await createSession(account.id, token, {
-        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
-        userAgent: ctx.headers.get("user-agent") ?? undefined,
+        ipAddress: ctx.hono.req.raw.headers.get("x-forwarded-for") ?? undefined,
+        userAgent: ctx.hono.req.raw.headers.get("user-agent") ?? undefined,
       });
+
+      // Set auth cookie
+      setAuthCookie(ctx, token);
 
       return {
         success: true,
         message: "Password set successfully. You are now logged in.",
-        token,
         account: {
           id: account.id,
           nationalId: account.nationalId,
@@ -315,15 +338,17 @@ export const beneficiaryAuthRouter = {
       // Log in immediately after signup
       const token = await createSessionToken(accountId);
       await createSession(accountId, token, {
-        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
-        userAgent: ctx.headers.get("user-agent") ?? undefined,
+        ipAddress: ctx.hono.req.raw.headers.get("x-forwarded-for") ?? undefined,
+        userAgent: ctx.hono.req.raw.headers.get("user-agent") ?? undefined,
       });
+
+      // Set auth cookie
+      setAuthCookie(ctx, token);
 
       return {
         success: true,
         message:
           "Account created successfully. Your account is pending verification, but you can still apply for programs.",
-        token,
         account: {
           id: accountId,
           nationalId: input.nationalId,
@@ -407,13 +432,15 @@ export const beneficiaryAuthRouter = {
       // Create session
       const token = await createSessionToken(account.id);
       await createSession(account.id, token, {
-        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
-        userAgent: ctx.headers.get("user-agent") ?? undefined,
+        ipAddress: ctx.hono.req.raw.headers.get("x-forwarded-for") ?? undefined,
+        userAgent: ctx.hono.req.raw.headers.get("user-agent") ?? undefined,
       });
+
+      // Set auth cookie
+      setAuthCookie(ctx, token);
 
       return {
         success: true,
-        token,
         account: {
           id: account.id,
           nationalId: account.nationalId,
@@ -426,7 +453,7 @@ export const beneficiaryAuthRouter = {
    * Get current session
    */
   getSession: publicProcedure({ captcha: false }).query(async ({ ctx }) => {
-    const token = ctx.headers.get("authorization")?.replace("Bearer ", "");
+    const token = getCookie(ctx.hono, BENEFICIARY_AUTH_COOKIE_NAME);
 
     if (!token) {
       return null;
@@ -460,11 +487,13 @@ export const beneficiaryAuthRouter = {
    * Logout - Delete session
    */
   logout: publicProcedure({ captcha: false }).mutation(async ({ ctx }) => {
-    const token = ctx.headers.get("authorization")?.replace("Bearer ", "");
-
+    const token = getCookie(ctx.hono, BENEFICIARY_AUTH_COOKIE_NAME);
     if (token) {
       await deleteSession(token);
     }
+
+    // Delete auth cookie
+    deleteAuthCookie(ctx);
 
     return { success: true };
   }),
@@ -491,7 +520,7 @@ export const beneficiaryAuthRouter = {
 
       // Create reset token
       const resetToken = await createPasswordResetToken(account.id, {
-        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
+        ipAddress: ctx.hono.req.raw.headers.get("x-forwarded-for") ?? undefined,
       });
 
       // TODO: Integrate with voice call service (Twilio, Vonage, etc.)
