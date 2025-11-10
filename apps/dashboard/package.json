@@ -34,6 +34,7 @@
     "i18next": "catalog:",
     "i18next-browser-languagedetector": "catalog:",
     "nitro": "npm:nitro-nightly@latest",
+    "radix-ui": "catalog:",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-i18next": "catalog:",

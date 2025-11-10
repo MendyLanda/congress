@@ -9,10 +9,10 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { Direction } from "radix-ui";
 import { useTranslation } from "react-i18next";
 
 import type { AppRouter } from "@congress/api/types";
-import { ThemeProvider, ThemeToggle } from "@congress/ui/theme";
 import { Toaster } from "@congress/ui/toast";
 
 import { setSSRLanguage } from "~/lib/i18n";
@@ -44,22 +44,22 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { i18n } = useTranslation();
+  const dir = i18n.dir();
+
   return (
-    <ThemeProvider>
-      <html lang={i18n.language} dir={i18n.dir()} suppressHydrationWarning>
+    <Direction.Provider dir={dir}>
+      <html lang={i18n.language} dir={dir} suppressHydrationWarning>
         <head>
           <HeadContent />
         </head>
         <body className="bg-background text-foreground min-h-screen font-sans antialiased">
           {children}
-          <div className="absolute right-4 bottom-12">
-            <ThemeToggle />
-          </div>
+          <div className="absolute right-4 bottom-12"></div>
           <Toaster />
           <TanStackRouterDevtools position="bottom-right" />
           <Scripts />
         </body>
       </html>
-    </ThemeProvider>
+    </Direction.Provider>
   );
 }
