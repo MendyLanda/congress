@@ -11,7 +11,7 @@ export const env = createEnv({
       .default("development"),
   },
   client: {
-    VITE_API_URL: z.url().default("http://localhost:3000"),
+    VITE_API_URL: z.url(),
   },
   runtimeEnv: process.env,
   skipValidation:

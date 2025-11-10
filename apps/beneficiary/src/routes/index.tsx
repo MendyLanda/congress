@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { useForm } from "@tanstack/react-form";
 import {
   useMutation,
-  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
@@ -42,15 +41,20 @@ function RouteComponent() {
   const { t } = useTranslation();
   const { session, isLoading, signOut } = useBeneficiaryAuth();
 
-  // If loading or no valid session, show login
-  if (isLoading || !session) {
+  // If no valid session, skip directly to login (don't wait for loading)
+  if (!session) {
     return (
       <main className="container flex h-screen items-center justify-center py-16">
-        {isLoading ? (
-          <div>{t("loading")}</div>
-        ) : (
-          <BeneficiaryLoginFlow />
-        )}
+        <BeneficiaryLoginFlow />
+      </main>
+    );
+  }
+
+  // Show loading only if we have a session but it's still loading (shouldn't happen)
+  if (isLoading) {
+    return (
+      <main className="container flex h-screen items-center justify-center py-16">
+        <div>{t("loading")}</div>
       </main>
     );
   }

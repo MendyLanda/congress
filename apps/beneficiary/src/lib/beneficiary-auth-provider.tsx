@@ -1,5 +1,5 @@
-import { createContext, useContext, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createContext, useCallback, useContext } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
 import type { RouterOutputs } from "@congress/api/types";
@@ -20,6 +20,20 @@ const BeneficiaryAuthContext = createContext<
   BeneficiaryAuthContextValue | undefined
 >(undefined);
 
+const BENEFICIARY_AUTH_COOKIE_NAME = "congress_bat"; // congress beneficiary auth token
+
+/**
+ * Check if the auth cookie exists client-side
+ */
+function hasAuthCookie(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.cookie
+    .split(";")
+    .some((cookie) =>
+      cookie.trim().startsWith(`${BENEFICIARY_AUTH_COOKIE_NAME}=`),
+    );
+}
+
 export function BeneficiaryAuthProvider({
   children,
 }: {
@@ -29,12 +43,19 @@ export function BeneficiaryAuthProvider({
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  // Fetch session
+  // Only fetch session if cookie exists - skip API call if no cookie
+  const cookieExists = hasAuthCookie();
   const {
     data: session,
     isLoading,
     refetch: refetchSession,
-  } = useQuery(trpc.beneficiaryAuth.getSession.queryOptions(undefined));
+  } = useQuery({
+    ...trpc.beneficiaryAuth.getSession.queryOptions(undefined),
+    enabled: cookieExists, // Only run query if cookie exists
+    retry: false, // Don't retry if there's no session
+    retryOnMount: false, // Don't retry on mount if there's no session
+    staleTime: 0, // Always check for fresh session
+  });
 
   const isAuthenticated = !!session;
 
@@ -84,4 +105,3 @@ export function useBeneficiaryAuth() {
   }
   return context;
 }
-
