@@ -115,6 +115,9 @@ importers:
 
   apps/beneficiary:
     dependencies:
+      '@better-upload/server':
+        specifier: ^3.0.0
+        version: 3.0.0
       '@congress/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -124,12 +127,12 @@ importers:
       '@congress/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@congress/transactional':
+        specifier: workspace:^
+        version: link:../../packages/transactional
       '@congress/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@congress/validators':
-        specifier: workspace:^
-        version: link:../../packages/validators
       '@fontsource-variable/rubik':
         specifier: ^5.2.8
         version: 5.2.8

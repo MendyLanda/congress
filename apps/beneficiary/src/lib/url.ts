@@ -1,7 +1,6 @@
 import { env } from "~/env";
 
 export function getBaseUrl() {
-  // FIXME: should point to the api url
   if (typeof window !== "undefined") {
     return window.location.origin;
   }
@@ -13,5 +12,5 @@ export function getBaseUrl() {
   }
 
   // eslint-disable-next-line no-restricted-properties
-  return `http://localhost:${process.env.PORT ?? 3000}`;
+  return `http://localhost:${process.env.PORT ?? 3001}`;
 }

@@ -9,6 +9,7 @@ import SuperJSON from "superjson";
 import type { AppRouter } from "@congress/api";
 
 import { env } from "~/env";
+import { getBaseUrl } from "./url";
 
 export const trpcClient = createTRPCClient<AppRouter>({
   links: [
@@ -19,16 +20,10 @@ export const trpcClient = createTRPCClient<AppRouter>({
     }),
     httpBatchStreamLink({
       transformer: SuperJSON,
-      url: env.VITE_API_URL + "/trpc",
-      fetch(url, options) {
-        return fetch(url, {
-          ...options,
-          credentials: "include", // Include cookies in requests
-        });
-      },
+      url: getBaseUrl() + "/api/trpc",
       headers() {
         const headers = new Headers();
-        headers.set("x-trpc-source", "beneficiary-app");
+        headers.set("x-trpc-source", "dashboard-app");
         return headers;
       },
     }),

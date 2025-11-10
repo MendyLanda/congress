@@ -7,6 +7,7 @@ import { createID } from "@congress/db";
 import { db } from "@congress/db/client";
 
 import { env } from "../env";
+import { getBaseUrl } from "./url";
 
 const database = drizzleAdapter(db, {
   provider: "pg",
@@ -61,6 +62,13 @@ export function initAuth<
 
   return betterAuth(config);
 }
+
+export const dashboardAuth = initAuth({
+  baseUrl: getBaseUrl(),
+  productionUrl: `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`,
+  secret: env.AUTH_SECRET,
+  extraPlugins: [],
+});
 
 export type DashboardAuth = ReturnType<typeof initAuth>;
 export type DashboardSession = DashboardAuth["$Infer"]["Session"];
