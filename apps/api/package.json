@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "TZ=UTC pnpm with-env bun run --hot src/index.ts",
-    "build": "tsc",
+    "build": "tsc --project tsconfig.build.json",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
