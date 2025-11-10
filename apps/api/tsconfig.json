@@ -2,8 +2,11 @@
   "extends": "@congress/tsconfig/base.json",
   "compilerOptions": {
     "lib": ["ES2023"],
-    "jsx": "preserve",
-    "types": ["bun"],
+    "jsx": "react-jsx",
+    "types": ["bun", "node"],
+    "outDir": "./dist",
+    "jsxImportSource": "hono/jsx",
+    "skipLibCheck": true,
   },
   "include": ["src", "env.ts"],
   "exclude": ["node_modules"],
