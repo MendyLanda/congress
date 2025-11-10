@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "TZ=UTC pnpm with-env bun run --hot src/index.ts",
-    "build": "tsc --project tsconfig.build.json",
+    "build": "tsc",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
@@ -36,7 +36,6 @@
     "@congress/prettier-config": "workspace:*",
     "@congress/tsconfig": "workspace:*",
     "@types/bun": "^1.3.2",
-    "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
