@@ -3,7 +3,7 @@
   "compilerOptions": {
     "lib": ["ES2023"],
     "jsx": "react-jsx",
-    "types": ["bun", "node"],
+    "types": ["bun"],
     "outDir": "./dist",
     "jsxImportSource": "hono/jsx",
     "skipLibCheck": true,
