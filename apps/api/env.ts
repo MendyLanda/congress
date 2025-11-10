@@ -5,6 +5,8 @@ import { z } from "zod/v4";
 export const apiEnv = () => {
   return createEnv({
     extends: [vercel()],
+    clientPrefix: "__",
+    client: {},
     server: {
       NODE_ENV: z.enum(["development", "production"]).optional(),
       POSTGRES_URL: z.url(),
