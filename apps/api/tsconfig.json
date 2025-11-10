@@ -1,5 +1,10 @@
 {
   "extends": "@congress/tsconfig/compiled-package.json",
+  "compilerOptions": {
+    "types": ["bun"],
+    "outDir": "./dist",
+    "jsxImportSource": "hono/jsx"
+  },
   "include": ["src", "env.ts"],
   "exclude": ["node_modules"]
 }
