@@ -1,0 +1,34 @@
+---
+alwaysApply: true
+---
+
+# How to use the `t` function
+
+Never write hardcoded text in the code, whenever you need to display text, use the `t` function.
+For the react apps you can get the `t` function like this:
+
+```tsx
+import { useTranslation } from "react-i18next";
+
+const { t } = useTranslation();
+```
+
+Once you have the `t` function, you can use it to display text like this:
+
+```tsx
+<div>{t("hello")}</div>
+```
+
+Or like this:
+
+```tsx
+<Button onClick={() => {
+  toast.success(t("success"));
+}}>
+  {t("click_me")}
+</Button>
+```
+
+You might see a type error that this key is not found in the translations, but that's okay, once you save the file this key will be extracted and added to the translations file - AUTOMATICALLY.
+
+You don't need to worry about writing the translation content, just pick an appropriate key for the text you want to display.
