@@ -27,7 +27,7 @@ void i18n
     resources,
     defaultNS,
     fallbackLng: "en",
-    supportedLngs: ["en", "it"],
+    supportedLngs: ["en", "he"],
     detection: {
       order: ["cookie"],
       lookupCookie: i18nCookieName,

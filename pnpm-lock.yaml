@@ -182,6 +182,9 @@ importers:
       '@congress/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@congress/validators':
+        specifier: workspace:^
+        version: link:../../packages/validators
       '@fontsource-variable/rubik':
         specifier: ^5.2.8
         version: 5.2.8
@@ -226,7 +229,7 @@ importers:
         version: 8.2.0
       nitro:
         specifier: npm:nitro-nightly@latest
-        version: nitro-nightly@3.0.1-20251109-184848-3a5337c9(@planetscale/database@1.19.0)(aws4fetch@1.0.20)(better-sqlite3@12.2.0)(chokidar@4.0.3)(drizzle-orm@0.44.7(@neondatabase/serverless@0.10.0)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@prisma/client@5.22.0(prisma@5.22.0))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(@vercel/postgres@0.10.0(utf-8-validate@6.0.4))(better-sqlite3@12.2.0)(gel@2.0.0)(kysely@0.28.5)(mysql2@3.11.3)(postgres@3.4.7)(prisma@5.22.0))(lru-cache@11.2.2)(mysql2@3.11.3)(vite@7.1.12(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
+        version: nitro-nightly@3.0.1-20251110-005841-4cf1b533(@planetscale/database@1.19.0)(aws4fetch@1.0.20)(better-sqlite3@12.2.0)(chokidar@4.0.3)(drizzle-orm@0.44.7(@neondatabase/serverless@0.10.0)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@prisma/client@5.22.0(prisma@5.22.0))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(@vercel/postgres@0.10.0(utf-8-validate@6.0.4))(better-sqlite3@12.2.0)(gel@2.0.0)(kysely@0.28.5)(mysql2@3.11.3)(postgres@3.4.7)(prisma@5.22.0))(lru-cache@11.2.2)(mysql2@3.11.3)(rollup@4.53.1)(vite@7.1.12(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
       react:
         specifier: catalog:react19
         version: 19.1.1
@@ -350,7 +353,7 @@ importers:
         version: 8.2.0
       nitro:
         specifier: npm:nitro-nightly@latest
-        version: nitro-nightly@3.0.1-20251109-184848-3a5337c9(@planetscale/database@1.19.0)(aws4fetch@1.0.20)(better-sqlite3@12.2.0)(chokidar@4.0.3)(drizzle-orm@0.44.7(@neondatabase/serverless@0.10.0)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@prisma/client@5.22.0(prisma@5.22.0))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(@vercel/postgres@0.10.0(utf-8-validate@6.0.4))(better-sqlite3@12.2.0)(gel@2.0.0)(kysely@0.28.5)(mysql2@3.11.3)(postgres@3.4.7)(prisma@5.22.0))(lru-cache@11.2.2)(mysql2@3.11.3)(vite@7.1.12(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
+        version: nitro-nightly@3.0.1-20251110-005841-4cf1b533(@planetscale/database@1.19.0)(aws4fetch@1.0.20)(better-sqlite3@12.2.0)(chokidar@4.0.3)(drizzle-orm@0.44.7(@neondatabase/serverless@0.10.0)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@prisma/client@5.22.0(prisma@5.22.0))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(@vercel/postgres@0.10.0(utf-8-validate@6.0.4))(better-sqlite3@12.2.0)(gel@2.0.0)(kysely@0.28.5)(mysql2@3.11.3)(postgres@3.4.7)(prisma@5.22.0))(lru-cache@11.2.2)(mysql2@3.11.3)(rollup@4.53.1)(vite@7.1.12(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
       react:
         specifier: catalog:react19
         version: 19.1.1
@@ -6416,16 +6419,19 @@ packages:
   nf3@0.1.9:
     resolution: {integrity: sha512-zhqe/2ikL/Jh/FwhHeLUo3Y6P1T8grD72DCkcljb9tR8ZIYQP9dV9C0+zok+EFFnog+p/HPFHiktz8VZD/79Tw==}
 
-  nitro-nightly@3.0.1-20251109-184848-3a5337c9:
-    resolution: {integrity: sha512-fbh4sLQY/5TDz60CvvCtvi9CS5GmwWYBRIYI6nIeO42/0/YjpKaBH4rmikPVJXYSV1N37nv+6Ko8psVOU9N8+Q==}
+  nitro-nightly@3.0.1-20251110-005841-4cf1b533:
+    resolution: {integrity: sha512-lQzg9TzrnJaCzB93+YkMJGxFNeyreCayKg47CYZztjsbJSyYUtYSiWAae5My9gf7r0w38jW1pp/a4hdM22RPnw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
       rolldown: '*'
+      rollup: ^4
       vite: 7.1.12
       xml2js: ^0.6.2
     peerDependenciesMeta:
       rolldown:
+        optional: true
+      rollup:
         optional: true
       vite:
         optional: true
@@ -13922,7 +13928,7 @@ snapshots:
 
   nf3@0.1.9: {}
 
-  nitro-nightly@3.0.1-20251109-184848-3a5337c9(@planetscale/database@1.19.0)(aws4fetch@1.0.20)(better-sqlite3@12.2.0)(chokidar@4.0.3)(drizzle-orm@0.44.7(@neondatabase/serverless@0.10.0)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@prisma/client@5.22.0(prisma@5.22.0))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(@vercel/postgres@0.10.0(utf-8-validate@6.0.4))(better-sqlite3@12.2.0)(gel@2.0.0)(kysely@0.28.5)(mysql2@3.11.3)(postgres@3.4.7)(prisma@5.22.0))(lru-cache@11.2.2)(mysql2@3.11.3)(vite@7.1.12(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)):
+  nitro-nightly@3.0.1-20251110-005841-4cf1b533(@planetscale/database@1.19.0)(aws4fetch@1.0.20)(better-sqlite3@12.2.0)(chokidar@4.0.3)(drizzle-orm@0.44.7(@neondatabase/serverless@0.10.0)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@prisma/client@5.22.0(prisma@5.22.0))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(@vercel/postgres@0.10.0(utf-8-validate@6.0.4))(better-sqlite3@12.2.0)(gel@2.0.0)(kysely@0.28.5)(mysql2@3.11.3)(postgres@3.4.7)(prisma@5.22.0))(lru-cache@11.2.2)(mysql2@3.11.3)(rollup@4.53.1)(vite@7.1.12(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)):
     dependencies:
       consola: 3.4.2
       crossws: 0.4.1(srvx@0.9.5)
@@ -13934,12 +13940,12 @@ snapshots:
       ohash: 2.0.11
       oxc-minify: 0.96.0
       oxc-transform: 0.96.0
-      rollup: 4.53.1
       srvx: 0.9.5
       undici: 7.16.0
       unenv: 2.0.0-rc.24
       unstorage: 2.0.0-alpha.4(@planetscale/database@1.19.0)(aws4fetch@1.0.20)(chokidar@4.0.3)(db0@0.3.4(better-sqlite3@12.2.0)(drizzle-orm@0.44.7(@neondatabase/serverless@0.10.0)(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@prisma/client@5.22.0(prisma@5.22.0))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(@vercel/postgres@0.10.0(utf-8-validate@6.0.4))(better-sqlite3@12.2.0)(gel@2.0.0)(kysely@0.28.5)(mysql2@3.11.3)(postgres@3.4.7)(prisma@5.22.0))(mysql2@3.11.3))(lru-cache@11.2.2)(ofetch@2.0.0-alpha.3)
     optionalDependencies:
+      rollup: 4.53.1
       vite: 7.1.12(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -14753,6 +14759,7 @@ snapshots:
       '@rollup/rollup-win32-x64-gnu': 4.53.1
       '@rollup/rollup-win32-x64-msvc': 4.53.1
       fsevents: 2.3.3
+    optional: true
 
   rou3@0.5.1: {}
 
