@@ -8,13 +8,11 @@ import {
   jsonb,
   pgEnum,
   text,
-  timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 import { createTable } from "../create-table";
-import { ulid } from "../types";
-import { User } from "./dashboard-auth.sql";
+import { DocumentType } from "./document.sql";
 import { ProgramVersion } from "./program.sql";
 
 /**
@@ -61,29 +59,6 @@ export const EligibilityCriteria = createTable(
 );
 
 /**
- * document_type table - Predefined and custom document types
- * System-defined types are created during migration
- * Staff can create custom types as needed
- */
-export const DocumentType = createTable(
-  "document_type",
-  {
-    id: bigserial({ mode: "number" }).primaryKey(),
-    name: text("name").notNull().unique(),
-    description: text("description"),
-    isSystemDefined: boolean("is_system_defined").notNull().default(false),
-    createdByUserId: ulid("user").references(() => User.id, {
-      onDelete: "set null",
-    }),
-    timeArchived: timestamp("time_archived"),
-  },
-  (table) => [
-    index("document_type_name_index").on(table.name),
-    index("document_type_is_system_defined_index").on(table.isSystemDefined),
-  ],
-);
-
-/**
  * program_document_requirement table - What documents each program version needs
  * Links document types to program versions with requirement details
  */
@@ -124,17 +99,6 @@ export const eligibilityCriteriaRelations = relations(
       fields: [EligibilityCriteria.programVersionId],
       references: [ProgramVersion.id],
     }),
-  }),
-);
-
-export const documentTypeRelations = relations(
-  DocumentType,
-  ({ one, many }) => ({
-    createdBy: one(User, {
-      fields: [DocumentType.createdByUserId],
-      references: [User.id],
-    }),
-    programRequirements: many(ProgramDocumentRequirement),
   }),
 );
 

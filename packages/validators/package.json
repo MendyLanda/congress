@@ -14,6 +14,18 @@
     "./israeli-id": {
       "types": "./dist/israeli-id.d.ts",
       "default": "./src/israeli-id.ts"
+    },
+    "./location": {
+      "types": "./dist/location.d.ts",
+      "default": "./src/location.ts"
+    },
+    "./beneficiary-auth": {
+      "types": "./dist/beneficiary-auth.d.ts",
+      "default": "./src/beneficiary-auth.ts"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "default": "./src/utils.ts"
     }
   },
   "scripts": {
@@ -25,6 +37,8 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "date-fns": "^4.1.0",
+    "libphonenumber-js": "^1.12.26",
     "zod": "catalog:"
   },
   "devDependencies": {

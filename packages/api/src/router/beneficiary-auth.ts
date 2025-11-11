@@ -5,8 +5,8 @@ import {
   setCookie,
 } from "@tanstack/react-start/server";
 import { TRPCError } from "@trpc/server";
-import { z } from "zod/v4";
 
+import type { BeneficiarySignupInput } from "@congress/validators";
 import {
   createOTP,
   createPasswordResetToken,
@@ -23,16 +23,33 @@ import {
   verifyPassword,
   verifyPasswordResetToken,
 } from "@congress/auth/beneficiary";
-import { createID, eq } from "@congress/db";
+import { and, createID, eq, isNull, or } from "@congress/db";
 import { db } from "@congress/db/client";
-import { BeneficiaryAccount, Person, PersonContact } from "@congress/db/schema";
+import {
+  BeneficiaryAccount,
+  Person,
+  PersonAddress,
+  PersonContact,
+  PersonDocument,
+  PersonRelationship,
+} from "@congress/db/schema";
 import { sendVoiceOTP } from "@congress/transactional/twilio";
+import {
+  beneficiaryIdLookupSchema,
+  beneficiaryLoginSchema,
+  beneficiaryOtpChangePasswordSchema,
+  beneficiaryOtpRequestSchema,
+  beneficiaryOtpVerifySchema,
+  beneficiaryPasswordResetRequestSchema,
+  beneficiaryResetPasswordSchema,
+  beneficiarySignupSchema,
+} from "@congress/validators";
 
 import { env } from "../../env";
 import { publicProcedure } from "../trpc";
 
-const BENEFICIARY_AUTH_COOKIE_NAME = "congress_bat"; // congress beneficiary auth token
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days in seconds
+const BENEFICIARY_AUTH_COOKIE_NAME = "congress_bat";
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 
 function setAuthCookie(token: string) {
   setCookie(BENEFICIARY_AUTH_COOKIE_NAME, token, {
@@ -53,97 +70,268 @@ function deleteAuthCookie() {
 function maskPhoneNumber(phoneNumber: string): string {
   if (!phoneNumber) return "05*****00";
 
-  // Keep leading + if present, then digits; otherwise just digits
   const trimmed = phoneNumber.trim();
   const hasPlus = trimmed.startsWith("+");
   const digits = (hasPlus ? "+" : "") + trimmed.replace(/[^\d+]/g, "");
 
-  // Normalize to local Israeli format: 0XXXXXXXXX (10 digits)
-  // Acceptable inputs:
-  // - +9725XXXXXXXX (e.g., +972533505770) -> 05XXXXXXXX
-  // - 9725XXXXXXXX  (e.g., 972533505770)  -> 05XXXXXXXX
-  // - 05XXXXXXXX    (e.g., 0533505770)    -> 05XXXXXXXX
-  // - 5XXXXXXXX     (e.g., 533505770)     -> 05XXXXXXXX
   let local: string | null = null;
 
   if (digits.startsWith("+972")) {
-    const rest = digits.slice(4); // after +972
-    if (/^5\d{8}$/.test(rest)) local = "0" + rest; // 05XXXXXXXX
+    const rest = digits.slice(4);
+    if (/^5\d{8}$/.test(rest)) local = `0${rest}`;
   } else if (digits.startsWith("972")) {
-    const rest = digits.slice(3); // after 972
-    if (/^5\d{8}$/.test(rest)) local = "0" + rest;
+    const rest = digits.slice(3);
+    if (/^5\d{8}$/.test(rest)) local = `0${rest}`;
   } else if (/^05\d{8}$/.test(digits)) {
     local = digits;
   } else if (/^5\d{8}$/.test(digits)) {
-    local = "0" + digits;
+    local = `0${digits}`;
   }
 
   if (!local) {
-    // Fallback predictable mask
     return "05********";
   }
 
-  const first3 = local.slice(0, 3); // e.g., 053
-  const last2 = local.slice(-2); // e.g., 70
+  const first3 = local.slice(0, 3);
+  const last2 = local.slice(-2);
   return `${first3}*****${last2}`;
 }
 
-/**
- * Validators for beneficiary auth
- */
-const nationalIdSchema = z.string().min(1).max(50);
-const phoneNumberSchema = z.string().min(10).max(20);
-const passwordSchema = z.string().min(8).max(128);
+type TransactionClient = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-const signupSchema = z.object({
-  nationalId: nationalIdSchema,
-  phoneNumber: phoneNumberSchema,
-  firstName: z.string().min(1).optional(),
-  lastName: z.string().min(1).optional(),
-  documents: z.array(
-    z.object({
-      documentType: z.string(),
-      fileUrl: z.string().url(),
-      fileName: z.string(),
-      fileSize: z.string(),
-      mimeType: z.string(),
-    }),
-  ),
-});
+type RelationshipType =
+  (typeof PersonRelationship.$inferInsert)["relationshipType"];
 
-const loginSchema = z.object({
-  nationalId: nationalIdSchema,
-  password: passwordSchema,
-});
+async function upsertPerson(
+  tx: TransactionClient,
+  person: {
+    nationalId: string;
+    firstName: string;
+    lastName: string;
+    dateOfBirth?: Date;
+  },
+  allowUpdate = false,
+) {
+  const existing = await tx.query.Person.findFirst({
+    where: eq(Person.nationalId, person.nationalId),
+  });
 
-const requestPasswordResetSchema = z.object({
-  nationalId: nationalIdSchema,
-});
+  if (existing) {
+    if (allowUpdate) {
+      await tx
+        .update(Person)
+        .set({
+          firstName: person.firstName,
+          lastName: person.lastName,
+          dateOfBirth: person.dateOfBirth,
+        })
+        .where(eq(Person.id, existing.id));
+      return { ...existing, ...person };
+    } else {
+      return existing;
+    }
+  }
 
-const resetPasswordSchema = z.object({
-  token: z.string(),
-  newPassword: passwordSchema,
-});
+  const [created] = await tx
+    .insert(Person)
+    .values({
+      nationalId: person.nationalId,
+      firstName: person.firstName,
+      lastName: person.lastName,
+      dateOfBirth: person.dateOfBirth,
+    })
+    .returning();
 
-const verifyOTPSchema = z.object({
-  nationalId: nationalIdSchema,
-  code: z.string().length(6),
-  newPassword: passwordSchema,
-});
+  if (!created) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "failed_to_create_person",
+    });
+  }
+
+  return created;
+}
+
+async function upsertPhoneContacts(
+  tx: TransactionClient,
+  personId: number,
+  primaryPhone: string,
+  homePhone?: string,
+) {
+  const primary = await tx.query.PersonContact.findFirst({
+    where: and(
+      eq(PersonContact.personId, personId),
+      eq(PersonContact.contactType, "phone"),
+      eq(PersonContact.isPrimary, true),
+    ),
+  });
+
+  if (primary) {
+    await tx
+      .update(PersonContact)
+      .set({ value: primaryPhone })
+      .where(eq(PersonContact.id, primary.id));
+  } else {
+    await tx.insert(PersonContact).values({
+      id: createID("personContact"),
+      personId,
+      value: primaryPhone,
+      contactType: "phone",
+      isPrimary: true,
+    });
+  }
+
+  if (!homePhone) return;
+
+  const home = await tx.query.PersonContact.findFirst({
+    where: and(
+      eq(PersonContact.personId, personId),
+      eq(PersonContact.contactType, "phone"),
+      eq(PersonContact.isPrimary, false),
+    ),
+  });
+
+  if (home) {
+    await tx
+      .update(PersonContact)
+      .set({ value: homePhone })
+      .where(eq(PersonContact.id, home.id));
+  } else {
+    await tx.insert(PersonContact).values({
+      id: createID("personContact"),
+      personId,
+      value: homePhone,
+      contactType: "phone",
+      isPrimary: false,
+    });
+  }
+}
+
+async function upsertAddress(
+  tx: TransactionClient,
+  personId: number,
+  address: BeneficiarySignupInput["address"],
+) {
+  const activeAddress = await tx.query.PersonAddress.findFirst({
+    where: and(
+      eq(PersonAddress.personId, personId),
+      isNull(PersonAddress.endDate),
+    ),
+  });
+
+  if (activeAddress) {
+    if (
+      activeAddress.cityId !== address.cityId ||
+      activeAddress.streetId !== address.streetId ||
+      activeAddress.houseNumber !== address.houseNumber ||
+      activeAddress.addressLine2 !== address.addressLine2 ||
+      activeAddress.postalCode !== address.postalCode
+    ) {
+      await tx
+        .update(PersonAddress)
+        .set({ endDate: new Date() })
+        .where(eq(PersonAddress.id, activeAddress.id));
+    } else {
+      return; // Address is the same, so no need to update
+    }
+  }
+
+  await tx.insert(PersonAddress).values({
+    id: createID("personAddress"),
+    personId,
+    cityId: address.cityId,
+    streetId: address.streetId,
+    houseNumber: address.houseNumber,
+    addressLine2: address.addressLine2,
+    postalCode: address.postalCode,
+    country: "IL",
+  });
+}
+
+async function ensureRelationship(
+  tx: TransactionClient,
+  params: {
+    personId: number;
+    relatedPersonId: number;
+    relationshipType: RelationshipType;
+  },
+) {
+  const existing = await tx.query.PersonRelationship.findFirst({
+    where: or(
+      and(
+        eq(PersonRelationship.personId, params.personId),
+        eq(PersonRelationship.relatedPersonId, params.relatedPersonId),
+        eq(PersonRelationship.relationshipType, params.relationshipType),
+        isNull(PersonRelationship.endDate),
+      ),
+      and(
+        eq(PersonRelationship.personId, params.relatedPersonId),
+        eq(PersonRelationship.relatedPersonId, params.personId),
+        eq(PersonRelationship.relationshipType, params.relationshipType),
+        isNull(PersonRelationship.endDate),
+      ),
+    ),
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  const [created] = await tx
+    .insert(PersonRelationship)
+    .values({
+      id: createID("personRelationship"),
+      personId: params.personId,
+      relatedPersonId: params.relatedPersonId,
+      relationshipType: params.relationshipType,
+    })
+    .returning();
+
+  return created;
+}
+
+async function storeDocuments(
+  tx: TransactionClient,
+  accountId: string,
+  documents: {
+    uploadId: string;
+    documentTypeId: string;
+  }[],
+) {
+  await tx.insert(PersonDocument).values(
+    documents.map((document) => ({
+      personId: accountId,
+      documentTypeId: document.documentTypeId,
+      uploadId: document.uploadId,
+    })),
+  );
+}
 
 export const beneficiaryAuthRouter = {
-  /**
-   * Check national ID - Check if account exists and if it has a password
-   * Returns account status and whether password is set
-   */
   checkNationalId: publicProcedure({ captcha: false })
-    .input(z.object({ nationalId: nationalIdSchema }))
+    .input(beneficiaryIdLookupSchema)
     .mutation(async ({ input }) => {
       const account = await db.query.BeneficiaryAccount.findFirst({
         where: eq(BeneficiaryAccount.nationalId, input.nationalId),
+        with: {
+          person: {
+            columns: {},
+            with: {
+              contacts: {
+                columns: {
+                  value: true,
+                },
+                where: and(
+                  eq(PersonContact.contactType, "phone"),
+                  eq(PersonContact.isPrimary, true),
+                ),
+              },
+            },
+          },
+        },
       });
 
-      if (!account) {
+      if (!account?.person.contacts[0]?.value) {
         return {
           exists: false,
           hasPassword: false,
@@ -154,39 +342,46 @@ export const beneficiaryAuthRouter = {
       return {
         exists: true,
         hasPassword: !!account.passwordHash,
-        phoneNumberMasked: maskPhoneNumber(account.phoneNumber),
+        phoneNumberMasked: maskPhoneNumber(account.person.contacts[0].value),
         status: account.status,
       };
     }),
 
-  /**
-   * Send OTP - Send one-time code via Twilio voice call
-   */
   sendOTP: publicProcedure({ captcha: true })
-    .input(z.object({ nationalId: nationalIdSchema }))
+    .input(beneficiaryOtpRequestSchema)
     .mutation(async ({ ctx, input }) => {
       const account = await db.query.BeneficiaryAccount.findFirst({
         where: eq(BeneficiaryAccount.nationalId, input.nationalId),
+        with: {
+          person: {
+            with: {
+              contacts: {
+                columns: {
+                  value: true,
+                },
+                where: and(
+                  eq(PersonContact.contactType, "phone"),
+                  eq(PersonContact.isPrimary, true),
+                ),
+              },
+            },
+          },
+        },
       });
 
-      if (!account) {
-        // Don't reveal if account exists for security
-        return {
-          success: true,
-          message:
-            "If an account exists with this national ID, a verification code has been sent to your phone.",
-          phoneNumberMasked: null,
-        };
+      if (!account?.person.contacts[0]?.value) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "no_phone_number_found_for_account_error",
+        });
       }
 
-      // Generate and store OTP
       const code = await createOTP(account.id, {
         ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
       });
 
-      // Send OTP via Twilio
       await sendVoiceOTP({
-        to: account.phoneNumber,
+        to: account.person.contacts[0].value,
         code,
       });
 
@@ -194,17 +389,42 @@ export const beneficiaryAuthRouter = {
         success: true,
         message:
           "A verification code has been sent to your phone via voice call.",
-        phoneNumberMasked: maskPhoneNumber(account.phoneNumber),
-        // In development, return the code for testing
+        phoneNumberMasked: maskPhoneNumber(account.person.contacts[0].value),
         devCode: env.NODE_ENV === "development" ? code : undefined,
       };
     }),
 
-  /**
-   * Verify OTP and set password - Verify OTP code and set/update password
-   */
+  verifyOTP: publicProcedure({ captcha: true })
+    .input(beneficiaryOtpVerifySchema)
+    .mutation(async ({ input }) => {
+      const account = await db.query.BeneficiaryAccount.findFirst({
+        where: eq(BeneficiaryAccount.nationalId, input.nationalId),
+      });
+
+      if (!account) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Account not found",
+        });
+      }
+
+      const isValidOTP = await verifyOTP(account.id, input.code);
+
+      if (!isValidOTP) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid or expired verification code",
+        });
+      }
+
+      return {
+        success: true,
+        message: "OTP verified successfully. You can now set your password.",
+      };
+    }),
+
   verifyOTPAndSetPassword: publicProcedure({ captcha: true })
-    .input(verifyOTPSchema)
+    .input(beneficiaryOtpChangePasswordSchema)
     .mutation(async ({ ctx, input }) => {
       const account = await db.query.BeneficiaryAccount.findFirst({
         where: eq(BeneficiaryAccount.nationalId, input.nationalId),
@@ -217,7 +437,6 @@ export const beneficiaryAuthRouter = {
         });
       }
 
-      // Verify OTP
       const isValidOTP = await verifyOTP(account.id, input.code);
 
       if (!isValidOTP) {
@@ -227,7 +446,6 @@ export const beneficiaryAuthRouter = {
         });
       }
 
-      // Hash and set password
       const passwordHash = await hashPassword(input.newPassword);
 
       await db
@@ -235,17 +453,14 @@ export const beneficiaryAuthRouter = {
         .set({ passwordHash })
         .where(eq(BeneficiaryAccount.id, account.id));
 
-      // Reset failed attempts
       await resetFailedLoginAttempts(account.id);
 
-      // Create session and log in
       const token = await createSessionToken(account.id);
       await createSession(account.id, token, {
         ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
         userAgent: ctx.headers.get("user-agent") ?? undefined,
       });
 
-      // Set auth cookie
       setAuthCookie(token);
 
       return {
@@ -259,100 +474,135 @@ export const beneficiaryAuthRouter = {
       };
     }),
 
-  /**
-   * Signup - Create a new beneficiary account without password
-   * Account will be in "pending" status until approved by admin
-   * User is logged in immediately after signup
-   */
   signup: publicProcedure({ captcha: true })
-    .input(signupSchema)
+    .input(beneficiarySignupSchema)
     .mutation(async ({ ctx, input }) => {
-      // Check if account already exists
-      const existingAccount = await db.query.BeneficiaryAccount.findFirst({
-        where: eq(BeneficiaryAccount.nationalId, input.nationalId),
-      });
-
-      if (existingAccount) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "An account with this national ID already exists",
+      const accountId = await db.transaction(async (tx) => {
+        const existingAccount = await tx.query.BeneficiaryAccount.findFirst({
+          where: eq(BeneficiaryAccount.nationalId, input.nationalId),
         });
-      }
 
-      // Check if person exists (should exist or create)
-      let person = await db.query.Person.findFirst({
-        where: eq(Person.nationalId, input.nationalId),
-      });
+        if (existingAccount) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "An account with this national ID already exists",
+          });
+        }
 
-      if (!person) {
-        // Create person if doesn't exist
-        const [newPerson] = await db
-          .insert(Person)
-          .values({
+        const applicant = await upsertPerson(
+          tx,
+          {
             nationalId: input.nationalId,
             firstName: input.firstName,
             lastName: input.lastName,
-          })
-          .returning();
+            dateOfBirth: input.dateOfBirth
+              ? new Date(input.dateOfBirth)
+              : undefined,
+          },
+          true,
+        );
 
-        person = newPerson;
-        if (!person) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to create person",
+        await upsertPhoneContacts(
+          tx,
+          applicant.id,
+          input.personalPhoneNumber.number,
+          input.homePhoneNumber?.number,
+        );
+        await upsertAddress(tx, applicant.id, input.address);
+
+        const beneficiaryAccountId = createID("beneficiaryAccount");
+        await tx.insert(BeneficiaryAccount).values({
+          id: beneficiaryAccountId,
+          nationalId: input.nationalId,
+          passwordHash: null,
+          status: "pending",
+        });
+
+        if (input.maritalStatus !== "single" && input.spouse) {
+          const relationshipType: RelationshipType =
+            input.maritalStatus === "married" ? "spouse" : "former_spouse";
+
+          const spousePerson = await upsertPerson(
+            tx,
+            {
+              nationalId: input.spouse.nationalId,
+              firstName: input.spouse.firstName,
+              lastName: input.spouse.lastName,
+              dateOfBirth: input.spouse.dateOfBirth
+                ? new Date(input.spouse.dateOfBirth)
+                : undefined,
+            },
+            false,
+          );
+
+          if (input.spouse.phoneNumber) {
+            await upsertPhoneContacts(
+              tx,
+              spousePerson.id,
+              input.spouse.phoneNumber.number,
+            );
+          }
+
+          await ensureRelationship(tx, {
+            personId: applicant.id,
+            relatedPersonId: spousePerson.id,
+            relationshipType,
           });
         }
-        // Create phone contact
-        await db.insert(PersonContact).values({
-          id: createID("personContact"),
-          personId: person.id,
-          value: input.phoneNumber,
-          contactType: "phone" as const,
-          isPrimary: true,
-        });
-      }
 
-      // Create account WITHOUT password (will be set via OTP flow)
-      const accountId = createID("beneficiaryAccount");
-      await db.insert(BeneficiaryAccount).values({
-        id: accountId,
-        nationalId: input.nationalId,
-        phoneNumber: input.phoneNumber,
-        passwordHash: null, // No password initially
-        status: "pending",
+        if (input.children.length > 0) {
+          for (const child of input.children) {
+            const childPerson = await upsertPerson(tx, {
+              nationalId: child.nationalId,
+              firstName: child.firstName,
+              lastName: child.lastName,
+              dateOfBirth: child.dateOfBirth
+                ? new Date(child.dateOfBirth)
+                : undefined,
+            });
+
+            await ensureRelationship(tx, {
+              personId: applicant.id,
+              relatedPersonId: childPerson.id,
+              relationshipType: "child",
+            });
+            await ensureRelationship(tx, {
+              personId: childPerson.id,
+              relatedPersonId: applicant.id,
+              relationshipType: "parent",
+            });
+          }
+        }
+
+        const documents = [];
+        if (input.identityCardUploadId) {
+          documents.push({
+            uploadId: input.identityCardUploadId,
+            documentTypeId: createID.SYSTEM_DOCUMENT_IDS.idCard,
+          });
+        }
+        if (input.identityAppendixUploadId) {
+          documents.push({
+            uploadId: input.identityAppendixUploadId,
+            documentTypeId: createID.SYSTEM_DOCUMENT_IDS.idAppendix,
+          });
+        }
+        await storeDocuments(tx, beneficiaryAccountId, documents);
+
+        return beneficiaryAccountId;
       });
 
-      // TODO: Implement document upload
-      // // Upload documents
-      // if (input.documents.length > 0) {
-      //   await db.insert(BeneficiaryDocument).values(
-      //     input.documents.map((doc) => ({
-      //       id: createID("beneficiaryDocument"),
-      //       accountId,
-      //       documentType: doc.documentType,
-      //       fileUrl: doc.fileUrl,
-      //       fileName: doc.fileName,
-      //       fileSize: doc.fileSize,
-      //       mimeType: doc.mimeType,
-      //       status: "pending" as const,
-      //     })),
-      //   );
-      // }
-
-      // Log in immediately after signup
       const token = await createSessionToken(accountId);
       await createSession(accountId, token, {
         ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
         userAgent: ctx.headers.get("user-agent") ?? undefined,
       });
 
-      // Set auth cookie
       setAuthCookie(token);
 
       return {
         success: true,
-        message:
-          "Account created successfully. Your account is pending verification, but you can still apply for programs.",
+        message: "account_created_successfully_pending_verification",
         account: {
           id: accountId,
           nationalId: input.nationalId,
@@ -361,13 +611,9 @@ export const beneficiaryAuthRouter = {
       };
     }),
 
-  /**
-   * Login - Authenticate with national ID and password
-   */
   login: publicProcedure({ captcha: true })
-    .input(loginSchema)
+    .input(beneficiaryLoginSchema)
     .mutation(async ({ ctx, input }) => {
-      // Find account by national ID
       const account = await db.query.BeneficiaryAccount.findFirst({
         where: eq(BeneficiaryAccount.nationalId, input.nationalId),
       });
@@ -379,7 +625,6 @@ export const beneficiaryAuthRouter = {
         });
       }
 
-      // Check if account is locked
       if (await isAccountLocked(account.id)) {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -388,7 +633,6 @@ export const beneficiaryAuthRouter = {
         });
       }
 
-      // Check if account has a password
       if (!account.passwordHash) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -397,9 +641,6 @@ export const beneficiaryAuthRouter = {
         });
       }
 
-      // Allow login even if account is pending (but submissions won't be processed)
-      // Only reject if account is rejected or suspended
-
       if (account.status === "rejected") {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -407,16 +648,17 @@ export const beneficiaryAuthRouter = {
         });
       }
 
-      if (account.status === "suspended") {
-        if (account.suspendedUntil && account.suspendedUntil > new Date()) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "Your account is suspended. Please contact support.",
-          });
-        }
+      if (
+        account.status === "suspended" &&
+        account.suspendedUntil &&
+        account.suspendedUntil > new Date()
+      ) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Your account is suspended. Please contact support.",
+        });
       }
 
-      // Verify password
       const isValidPassword = await verifyPassword(
         input.password,
         account.passwordHash,
@@ -430,17 +672,14 @@ export const beneficiaryAuthRouter = {
         });
       }
 
-      // Reset failed attempts and update last login
       await resetFailedLoginAttempts(account.id);
 
-      // Create session
       const token = await createSessionToken(account.id);
       await createSession(account.id, token, {
         ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
         userAgent: ctx.headers.get("user-agent") ?? undefined,
       });
 
-      // Set auth cookie
       setAuthCookie(token);
 
       return {
@@ -453,9 +692,6 @@ export const beneficiaryAuthRouter = {
       };
     }),
 
-  /**
-   * Get current session
-   */
   getSession: publicProcedure({ captcha: false }).query(async () => {
     const token = getCookie(BENEFICIARY_AUTH_COOKIE_NAME);
 
@@ -473,7 +709,6 @@ export const beneficiaryAuthRouter = {
       where: eq(BeneficiaryAccount.id, session.accountId),
     });
 
-    // Return session even for pending accounts (they can still use the app)
     if (!account) {
       return null;
     }
@@ -487,34 +722,25 @@ export const beneficiaryAuthRouter = {
     };
   }),
 
-  /**
-   * Logout - Delete session
-   */
   logout: publicProcedure({ captcha: false }).mutation(async () => {
     const token = getCookie(BENEFICIARY_AUTH_COOKIE_NAME);
     if (token) {
       await deleteSession(token);
     }
 
-    // Delete auth cookie
     deleteAuthCookie();
 
     return { success: true };
   }),
 
-  /**
-   * Request password reset - Generate token and send via voice call
-   * In production, you'll integrate with a voice service (Twilio, etc.)
-   */
   requestPasswordReset: publicProcedure({ captcha: true })
-    .input(requestPasswordResetSchema)
+    .input(beneficiaryPasswordResetRequestSchema)
     .mutation(async ({ ctx, input }) => {
       const account = await db.query.BeneficiaryAccount.findFirst({
         where: eq(BeneficiaryAccount.nationalId, input.nationalId),
       });
 
       if (!account) {
-        // Don't reveal if account exists for security
         return {
           success: true,
           message:
@@ -522,37 +748,24 @@ export const beneficiaryAuthRouter = {
         };
       }
 
-      // Create reset token
       const resetToken = await createPasswordResetToken(account.id, {
         ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
       });
 
-      // TODO: Integrate with voice call service (Twilio, Vonage, etc.)
-      // For now, we'll return the token (in production, send via voice call)
-      console.log(
+      console.info(
         `[DEV] Password reset token for ${account.nationalId}: ${resetToken}`,
       );
-
-      // In production:
-      // await sendVoiceCall({
-      //   to: account.phoneNumber,
-      //   message: `Your password reset code is: ${resetToken}. This code expires in 15 minutes.`,
-      // });
 
       return {
         success: true,
         message:
           "A password reset code has been sent to your phone via voice call.",
-        // Remove this in production
         devToken: env.NODE_ENV === "development" ? resetToken : undefined,
       };
     }),
 
-  /**
-   * Reset password using token from voice call
-   */
   resetPassword: publicProcedure({ captcha: true })
-    .input(resetPasswordSchema)
+    .input(beneficiaryResetPasswordSchema)
     .mutation(async ({ input }) => {
       const accountId = await verifyPasswordResetToken(input.token);
 
@@ -563,17 +776,15 @@ export const beneficiaryAuthRouter = {
         });
       }
 
-      // Hash new password
       const passwordHash = await hashPassword(input.newPassword);
 
-      // Update password and mark token as used
       await Promise.all([
         db
           .update(BeneficiaryAccount)
           .set({ passwordHash })
           .where(eq(BeneficiaryAccount.id, accountId)),
         markPasswordResetTokenUsed(input.token),
-        resetFailedLoginAttempts(accountId), // Reset failed attempts
+        resetFailedLoginAttempts(accountId),
       ]);
 
       return {
@@ -583,11 +794,8 @@ export const beneficiaryAuthRouter = {
       };
     }),
 
-  /**
-   * Check account status (for pending accounts to check if approved)
-   */
   checkAccountStatus: publicProcedure({ captcha: true })
-    .input(z.object({ nationalId: nationalIdSchema }))
+    .input(beneficiaryIdLookupSchema)
     .query(async ({ input }) => {
       const account = await db.query.BeneficiaryAccount.findFirst({
         where: eq(BeneficiaryAccount.nationalId, input.nationalId),

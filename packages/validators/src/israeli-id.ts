@@ -1,19 +1,34 @@
-import z from "zod";
+import { z } from "zod/v4";
 
-function luhnCheck(num: string): boolean {
-  const str = String(num).replace(/\s+/g, ""); // remove spaces
-  if (!/^\d+$/.test(str)) return false; // must be digits only
+const DIGIT_ONLY_REGEX = /^\d+$/;
+const RAW_ID_REGEX = /^\d{5,9}$/;
+const ISRAELI_ID_LENGTH = 9;
+
+function normalizeIsraeliId(id: string): string | null {
+  const digitsOnly = id.replace(/\s+/g, "");
+  if (!RAW_ID_REGEX.test(digitsOnly)) {
+    return null;
+  }
+
+  return digitsOnly.padStart(ISRAELI_ID_LENGTH, "0");
+}
+
+function luhnCheck(normalizedId: string): boolean {
+  if (!DIGIT_ONLY_REGEX.test(normalizedId)) {
+    return false;
+  }
 
   let sum = 0;
   let shouldDouble = false;
 
-  // iterate from right to left
-  for (let i = str.length - 1; i >= 0; i--) {
-    let digit = str.charCodeAt(i) - 48; // faster than parseInt(str[i], 10)
+  for (let i = normalizedId.length - 1; i >= 0; i--) {
+    let digit = normalizedId.charCodeAt(i) - 48;
 
     if (shouldDouble) {
       digit *= 2;
-      if (digit > 9) digit -= 9; // equivalent to summing digits
+      if (digit > 9) {
+        digit -= 9;
+      }
     }
 
     sum += digit;
@@ -23,8 +38,30 @@ function luhnCheck(num: string): boolean {
   return sum % 10 === 0;
 }
 
-export const zodIsraeliId = z.string().refine(luhnCheck, "Invalid Israeli ID");
+export const zodIsraeliId = z
+  .string()
+  .trim()
+  .refine(
+    (value) => {
+      const normalized = normalizeIsraeliId(value);
+      return normalized !== null && luhnCheck(normalized);
+    },
+    {
+      message: "invalid_israeli_id",
+    },
+  )
+  .transform((value) => normalizeIsraeliId(value) ?? value);
 
 export const validateIsraeliId = (id: string): boolean => {
-  return luhnCheck(id);
+  const normalized = normalizeIsraeliId(id);
+  return normalized !== null && luhnCheck(normalized);
+};
+
+export const normalizeIsraeliIdForStorage = (id: string): string | null => {
+  const normalized = normalizeIsraeliId(id);
+  if (!normalized || !luhnCheck(normalized)) {
+    return null;
+  }
+
+  return normalized;
 };

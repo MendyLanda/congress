@@ -1,4 +1,4 @@
-import { eq, isNull, lt, ne, sql } from "drizzle-orm";
+import { eq, isNull, lt, ne, relations, sql } from "drizzle-orm";
 import {
   bigint,
   bigserial,
@@ -62,9 +62,10 @@ export const PersonAddress = createTable(
   {
     id: ulid("personAddress").primaryKey(),
     personId: bigint({ mode: "number" }).notNull(),
-    addressLine1: text().notNull(),
+    cityId: bigint({ mode: "number" }).notNull(),
+    streetId: bigint({ mode: "number" }).notNull(),
+    houseNumber: text().notNull(),
     addressLine2: text(),
-    city: text(),
     postalCode: text(),
     country: char({ length: 2 }),
     startDate: timestamp("start_date").notNull().defaultNow(),
@@ -105,7 +106,7 @@ export const PersonRelationship = createTable(
     relatedPersonId: bigint({ mode: "number" })
       .notNull()
       .references(() => Person.id, { onDelete: "cascade" }),
-    relationshipType: relationshipTypeEnum(),
+    relationshipType: relationshipTypeEnum().notNull(),
     startDate: timestamp("start_date").notNull().defaultNow(),
     endDate: timestamp("end_date"),
     endReason: text(),
@@ -131,3 +132,23 @@ export const PersonRelationship = createTable(
     ),
   ],
 );
+
+export const personContactRelations = relations(PersonContact, ({ one }) => ({
+  person: one(Person, {
+    fields: [PersonContact.personId],
+    references: [Person.id],
+  }),
+}));
+
+export const personAddressRelations = relations(PersonAddress, ({ one }) => ({
+  person: one(Person, {
+    fields: [PersonAddress.personId],
+    references: [Person.id],
+  }),
+}));
+
+export const personRelations = relations(Person, ({ many }) => ({
+  contacts: many(PersonContact),
+  addresses: many(PersonAddress),
+  relationships: many(PersonRelationship),
+}));

@@ -12,8 +12,8 @@ import { createTable } from "../create-table";
 import { ulid } from "../types";
 import { BeneficiaryAccount } from "./beneficiary-auth.sql";
 import { User } from "./dashboard-auth.sql";
+import { DocumentType } from "./document.sql";
 import { Person } from "./person.sql";
-import { DocumentType } from "./program-requirements.sql";
 import { ProgramVersion } from "./program.sql";
 import { Upload } from "./upload.sql";
 

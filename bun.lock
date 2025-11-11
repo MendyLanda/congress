@@ -261,6 +261,8 @@
     "packages/validators": {
       "name": "@congress/validators",
       "dependencies": {
+        "date-fns": "^4.1.0",
+        "libphonenumber-js": "^1.12.26",
         "zod": "catalog:",
       },
       "devDependencies": {

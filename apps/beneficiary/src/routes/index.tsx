@@ -1,11 +1,11 @@
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useForm } from "@tanstack/react-form";
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import type { RouterOutputs } from "@congress/api";
@@ -22,7 +22,6 @@ import {
 import { Input } from "@congress/ui/input";
 import { toast } from "@congress/ui/toast";
 
-import { BeneficiaryLoginFlow } from "~/component/beneficiary-login-flow";
 import { useBeneficiaryAuth } from "~/lib/beneficiary-auth-provider";
 import { useTRPC } from "~/lib/trpc";
 
@@ -40,12 +39,23 @@ export const Route = createFileRoute("/")({
 function RouteComponent() {
   const { t } = useTranslation();
   const { session, isLoading, signOut } = useBeneficiaryAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!session && !isLoading) {
+      void navigate({
+        to: "/login",
+        search: { nationalId: undefined },
+        replace: true,
+      });
+    }
+  }, [isLoading, navigate, session]);
 
   // If no valid session, skip directly to login (don't wait for loading)
   if (!session) {
     return (
-      <main className="container flex h-screen items-center justify-center py-16">
-        <BeneficiaryLoginFlow />
+      <main className="bg-muted flex h-screen items-center justify-center">
+        <div className="text-muted-foreground">{t("redirecting_to_login")}</div>
       </main>
     );
   }

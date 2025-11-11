@@ -12,6 +12,7 @@ import {
 import { createTable } from "../create-table";
 import { ulid } from "../types";
 import { User } from "./dashboard-auth.sql";
+import { Person, PersonContact } from "./person.sql";
 
 /**
  * Account status enum
@@ -42,7 +43,6 @@ export const BeneficiaryAccount = createTable(
   {
     id: ulid("beneficiaryAccount").primaryKey(),
     nationalId: varchar("national_id", { length: 10 }).notNull().unique(), // 10 digits
-    phoneNumber: varchar("phone_number", { length: 15 }).notNull().unique(), // E.164 format +972501234567
     passwordHash: text("password_hash"), // Nullable - accounts can be created without password initially
     status: beneficiaryAccountStatusEnum("status").notNull().default("pending"),
     timeApproved: timestamp("time_approved"),
@@ -119,6 +119,9 @@ export const BeneficiaryOTP = createTable(
     accountId: text("account_id")
       .notNull()
       .references(() => BeneficiaryAccount.id, { onDelete: "cascade" }),
+    personContactId: ulid("personContact").references(() => PersonContact.id, {
+      onDelete: "cascade",
+    }),
     code: varchar("code", { length: 6 }).notNull(), // 6-digit OTP code
     expiresAt: timestamp("expires_at").notNull(),
     usedAt: timestamp("used_at"),
@@ -136,10 +139,14 @@ export const BeneficiaryOTP = createTable(
  */
 export const beneficiaryAccountRelations = relations(
   BeneficiaryAccount,
-  ({ many }) => ({
+  ({ many, one }) => ({
     sessions: many(BeneficiarySession),
     passwordResets: many(BeneficiaryPasswordReset),
     otps: many(BeneficiaryOTP),
+    person: one(Person, {
+      fields: [BeneficiaryAccount.nationalId],
+      references: [Person.nationalId],
+    }),
   }),
 );
 
