@@ -95,7 +95,7 @@ export const ApplicationDocument = createTable(
     applicationId: bigint("application_id", { mode: "number" })
       .notNull()
       .references(() => Application.id, { onDelete: "cascade" }),
-    documentTypeId: bigint("document_type_id", { mode: "number" })
+    documentTypeId: ulid("documentType")
       .notNull()
       .references(() => DocumentType.id, { onDelete: "restrict" }),
     uploadId: ulid("upload")

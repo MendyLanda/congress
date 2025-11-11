@@ -1,5 +1,12 @@
 import { relations } from "drizzle-orm";
-import { bigserial, boolean, index, integer, text } from "drizzle-orm/pg-core";
+import {
+  bigint,
+  bigserial,
+  boolean,
+  index,
+  integer,
+  text,
+} from "drizzle-orm/pg-core";
 
 import { createTable } from "../create-table";
 import { ulid } from "../types";
@@ -43,7 +50,7 @@ export const PersonDocument = createTable(
   "person_document",
   {
     id: bigserial({ mode: "number" }).primaryKey(),
-    personId: ulid("person")
+    personId: bigint({ mode: "number" })
       .references(() => Person.id, {
         onDelete: "cascade",
       })

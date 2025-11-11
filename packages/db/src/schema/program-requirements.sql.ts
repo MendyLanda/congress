@@ -12,6 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createTable } from "../create-table";
+import { ulid } from "../types";
 import { DocumentType } from "./document.sql";
 import { ProgramVersion } from "./program.sql";
 
@@ -69,7 +70,7 @@ export const ProgramDocumentRequirement = createTable(
     programVersionId: bigint("program_version_id", { mode: "number" })
       .notNull()
       .references(() => ProgramVersion.id, { onDelete: "cascade" }),
-    documentTypeId: bigint("document_type_id", { mode: "number" })
+    documentTypeId: ulid("documentType")
       .notNull()
       .references(() => DocumentType.id, { onDelete: "restrict" }),
     isRequired: boolean("is_required").notNull().default(true),

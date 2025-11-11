@@ -84,7 +84,7 @@ function LoginRouteComponent() {
   const sendOtpMutation = useMutation(
     trpc.beneficiaryAuth.sendOTP.mutationOptions({
       onSuccess: (data) => {
-        setMaskedPhoneNumber(data.phoneNumberMasked ?? null);
+        setMaskedPhoneNumber(data.phoneNumberMasked);
         toast.success(data.message);
         if (data.devCode) {
           console.info("[DEV] OTP Code:", data.devCode);
@@ -111,6 +111,18 @@ function LoginRouteComponent() {
   );
 
   const verifyOtpMutation = useMutation(
+    trpc.beneficiaryAuth.verifyOTP.mutationOptions({
+      onSuccess: () => {
+        toast.success(t("otp_verified_successfully"));
+        setStep("setPassword");
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    }),
+  );
+
+  const setPasswordMutation = useMutation(
     trpc.beneficiaryAuth.verifyOTPAndSetPassword.mutationOptions({
       onSuccess: async (data) => {
         toast.success(data.message);
@@ -157,13 +169,27 @@ function LoginRouteComponent() {
 
       setMaskedPhoneNumber(result.phoneNumberMasked ?? null);
 
-      if (result.hasPassword) {
+      if (result.nextStep === "password") {
         passwordForm.reset();
         setStep("password");
         return;
       }
 
-      await sendOtpMutation.mutateAsync({ nationalId: value.nationalId });
+      if (result.nextStep === "setPassword") {
+        await sendOtpMutation.mutateAsync({ nationalId: value.nationalId });
+        return;
+      }
+
+      // If nextStep is "signup", navigate to signup
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (result.nextStep === "signup") {
+        toast.success(t("no_account_found_redirecting"));
+        await navigate({
+          to: "/signup",
+          search: { nationalId: value.nationalId },
+          replace: false,
+        });
+      }
     },
   });
 
@@ -195,9 +221,18 @@ function LoginRouteComponent() {
     validators: {
       onSubmit: otpSchema,
     },
-    onSubmit: ({ value }) => {
+    onSubmit: async ({ value }) => {
+      if (!selectedNationalId) {
+        toast.error(t("national_id_missing"));
+        setStep("identify");
+        return;
+      }
+
+      await verifyOtpMutation.mutateAsync({
+        nationalId: selectedNationalId,
+        code: value.otp,
+      });
       setOtpCode(value.otp);
-      setStep("setPassword");
     },
   });
 
@@ -222,7 +257,7 @@ function LoginRouteComponent() {
         return;
       }
 
-      await verifyOtpMutation.mutateAsync({
+      await setPasswordMutation.mutateAsync({
         nationalId: selectedNationalId,
         code: otpCode,
         newPassword: value.newPassword,
@@ -251,7 +286,8 @@ function LoginRouteComponent() {
     isCheckingId ||
     sendOtpMutation.isPending ||
     loginMutation.isPending ||
-    verifyOtpMutation.isPending;
+    verifyOtpMutation.isPending ||
+    setPasswordMutation.isPending;
 
   const heading = useMemo(() => {
     switch (step) {
@@ -492,7 +528,11 @@ function LoginRouteComponent() {
                         }
                         placeholder="000000"
                         className="text-center text-2xl tracking-[0.4em]"
-                        disabled={otpFormSubmitting || isBusy}
+                        disabled={
+                          otpFormSubmitting ||
+                          isBusy ||
+                          verifyOtpMutation.isPending
+                        }
                       />
                       {isInvalid && (
                         <FieldError errors={field.state.meta.errors} />

@@ -1,8 +1,8 @@
 import type { AnyFieldApi } from "@tanstack/react-form";
 import type { z } from "zod/v4";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm, useStore } from "@tanstack/react-form";
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
@@ -29,6 +29,7 @@ import {
   beneficiarySignupSchema,
 } from "@congress/validators";
 
+import { AddressFields } from "~/component/address-fields";
 import { useBeneficiaryAuth } from "~/lib/beneficiary-auth-provider";
 import { useTRPC } from "~/lib/trpc";
 
@@ -55,24 +56,11 @@ function SignupRouteComponent() {
   const { session } = useBeneficiaryAuth();
   const search = Route.useSearch();
 
-  const [selectedCityId, setSelectedCityId] = useState<string | null>(null);
-
   useEffect(() => {
     if (session) {
       void navigate({ to: "/", replace: true });
     }
   }, [navigate, session]);
-
-  const citiesQuery = useSuspenseQuery(
-    trpc.location.cities.queryOptions(undefined),
-  );
-
-  const streetsQuery = useQuery(
-    trpc.location.streets.queryOptions(
-      { cityId: selectedCityId ?? "" },
-      { enabled: Boolean(selectedCityId) },
-    ),
-  );
 
   const signupMutation = useMutation(
     trpc.beneficiaryAuth.signup.mutationOptions({
@@ -96,8 +84,9 @@ function SignupRouteComponent() {
       dateOfBirth: "",
       maritalStatus: "single" as MaritalStatus,
       address: {
-        city: "",
-        street: "",
+        cityId: 0,
+        cityCode: 0,
+        streetId: 0,
         houseNumber: "",
         addressLine2: "",
         postalCode: "",
@@ -124,8 +113,10 @@ function SignupRouteComponent() {
       onSubmit: beneficiarySignupSchema,
     },
     onSubmit: async ({ value }) => {
+      const { cityCode: _cityCode, ...address } = value.address;
       const payload = {
         ...value,
+        address,
         homePhoneNumber: value.homePhoneNumber || undefined,
         spouse:
           value.maritalStatus === "single"
@@ -282,9 +273,6 @@ function SignupRouteComponent() {
     );
   };
 
-  const cities = citiesQuery.data;
-  const streets = streetsQuery.data ?? [];
-
   const documentTypeOptions = useMemo(
     () => [
       { value: "identity_card" as const, label: t("document_identity_card") },
@@ -380,102 +368,25 @@ function SignupRouteComponent() {
             <h2 className="text-lg font-medium">{t("address_information")}</h2>
             <FieldGroup>
               <form.Field
-                name="address.city"
-                children={(field) => {
-                  const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid;
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldContent>
-                        <FieldLabel>{t("city")}</FieldLabel>
-                      </FieldContent>
-                      <Select
-                        disabled={isSubmitting}
-                        onValueChange={(value) => {
-                          const selected = cities.find(
-                            (city) => city.id === value,
-                          );
-                          setSelectedCityId(value);
-                          form.setFieldValue("address.street", "");
-                          field.handleChange(selected?.name ?? "");
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={t("select_city_placeholder")}
-                          >
-                            {field.state.value || t("select_city_placeholder")}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {cities.map((city) => (
-                            <SelectItem key={city.id} value={city.id}>
-                              {city.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {isInvalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  );
-                }}
-              />
-              <form.Field
-                name="address.street"
-                children={(field) => {
-                  const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid;
-                  const canSelectStreet = Boolean(selectedCityId);
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldContent>
-                        <FieldLabel>{t("street")}</FieldLabel>
-                      </FieldContent>
-                      {canSelectStreet ? (
-                        <Select
-                          disabled={!selectedCityId || isSubmitting}
-                          onValueChange={(value) => {
-                            const street = streets.find(
-                              (item) => item.id === value,
-                            );
-                            field.handleChange(street?.name ?? value);
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue
-                              placeholder={t("select_street_placeholder")}
-                            >
-                              {field.state.value ||
-                                t("select_street_placeholder")}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {streets.map((street) => (
-                              <SelectItem key={street.id} value={street.id}>
-                                {street.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Input
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(event) =>
-                            field.handleChange(event.target.value)
-                          }
-                          disabled={isSubmitting}
-                          placeholder={t("street_placeholder")}
-                        />
-                      )}
-                      {isInvalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  );
-                }}
+                name="address.cityId"
+                children={(cityIdField) => (
+                  <form.Field
+                    name="address.cityCode"
+                    children={(cityCodeField) => (
+                      <form.Field
+                        name="address.streetId"
+                        children={(streetIdField) => (
+                          <AddressFields
+                            cityIdField={cityIdField}
+                            cityCodeField={cityCodeField}
+                            streetIdField={streetIdField}
+                            isSubmitting={isSubmitting}
+                          />
+                        )}
+                      />
+                    )}
+                  />
+                )}
               />
             </FieldGroup>
             <FieldGroup>

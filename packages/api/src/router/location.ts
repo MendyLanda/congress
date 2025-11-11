@@ -21,6 +21,7 @@ export const locationRouter = {
         columns: {
           id: true,
           nameHe: true,
+          code: true,
         },
         where: trgm(
           City.nameHeNormalized,

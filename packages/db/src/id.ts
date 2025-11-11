@@ -5,7 +5,6 @@ export const prefixes = {
   session: "ses",
   account: "acc",
   verification: "ver",
-  person: "person",
   personContact: "p_ctct",
   personAddress: "p_addr",
   personRelationship: "p_rel",

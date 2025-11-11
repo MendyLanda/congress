@@ -292,7 +292,7 @@ async function ensureRelationship(
 
 async function storeDocuments(
   tx: TransactionClient,
-  accountId: string,
+  personId: number,
   documents: {
     uploadId: string;
     documentTypeId: string;
@@ -300,7 +300,7 @@ async function storeDocuments(
 ) {
   await tx.insert(PersonDocument).values(
     documents.map((document) => ({
-      personId: accountId,
+      personId,
       documentTypeId: document.documentTypeId,
       uploadId: document.uploadId,
     })),
@@ -334,14 +334,18 @@ export const beneficiaryAuthRouter = {
       if (!account?.person.contacts[0]?.value) {
         return {
           exists: false,
-          hasPassword: false,
+          nextStep: "signup" as const,
           phoneNumberMasked: null,
         };
       }
 
+      const nextStep = account.passwordHash
+        ? ("password" as const)
+        : ("setPassword" as const);
+
       return {
         exists: true,
-        hasPassword: !!account.passwordHash,
+        nextStep,
         phoneNumberMasked: maskPhoneNumber(account.person.contacts[0].value),
         status: account.status,
       };
@@ -587,7 +591,7 @@ export const beneficiaryAuthRouter = {
             documentTypeId: createID.SYSTEM_DOCUMENT_IDS.idAppendix,
           });
         }
-        await storeDocuments(tx, beneficiaryAccountId, documents);
+        await storeDocuments(tx, applicant.id, documents);
 
         return beneficiaryAccountId;
       });

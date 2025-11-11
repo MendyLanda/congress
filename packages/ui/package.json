@@ -9,6 +9,7 @@
     "./alert": "./src/components/alert.tsx",
     "./alert-dialog": "./src/components/alert-dialog.tsx",
     "./aspect-ratio": "./src/components/aspect-ratio.tsx",
+    "./autocomplete": "./src/components/autocomplete.tsx",
     "./avatar": "./src/components/avatar.tsx",
     "./badge": "./src/components/badge.tsx",
     "./breadcrumb": "./src/components/breadcrumb.tsx",
