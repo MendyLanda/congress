@@ -36,6 +36,7 @@ export const SYSTEM_DOCUMENT_TYPES: {
   createdByUserId: string;
   id: string;
   allowedFileTypes: string[];
+  maxFileSize: number;
 }[] = [
   {
     name: "תעודת זהות",
@@ -45,6 +46,7 @@ export const SYSTEM_DOCUMENT_TYPES: {
     createdByUserId: SYSTEM_USER_ID,
     id: SYSTEM_DOCUMENT_IDS.idCard,
     allowedFileTypes: ["image/*", "application/pdf"],
+    maxFileSize: 10485760, // 10MB
   },
   {
     name: "ספח תעודת זהות",
@@ -54,5 +56,6 @@ export const SYSTEM_DOCUMENT_TYPES: {
     createdByUserId: SYSTEM_USER_ID,
     id: SYSTEM_DOCUMENT_IDS.idAppendix,
     allowedFileTypes: ["image/*", "application/pdf"],
+    maxFileSize: 10485760, // 10MB
   },
 ] as const;
