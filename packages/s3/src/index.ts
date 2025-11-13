@@ -72,7 +72,8 @@ export const generatePresignedUploadUrl = async ({
   };
 
   if (contentType) {
-    conditions.push(["starts-with", "#Content-Type", contentType]);
+    conditions.push({ "Content-Type": contentType });
+    fields["Content-Type"] = contentType;
   }
 
   if (md5HashOfTheFile) {
@@ -101,10 +102,6 @@ export const generatePresignedUploadUrl = async ({
     fields: createdFields,
   };
 };
-
-export function sanitizeKey(key: string) {
-  return key.replace(/[^a-zA-Z0-9.-]/g, "-").replace(/^-+|-+$/g, "");
-}
 
 export async function deleteObject(bucket: string, key: string) {
   return await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));

@@ -313,3 +313,69 @@ export async function verifyOTP(
 
   return true;
 }
+
+/**
+ * Create and store an OTP code for signup (without an account)
+ */
+export async function createSignupOTP(
+  nationalId: string,
+  phoneNumber: string,
+  options?: { ipAddress?: string },
+): Promise<string> {
+  const code = generateOTPCode();
+  const expiresAt = new Date(Date.now() + OTP_EXPIRES_IN_MS);
+
+  // Invalidate any existing unused OTPs for this nationalId + phoneNumber combination
+  await db
+    .update(BeneficiaryOTP)
+    .set({ usedAt: new Date() })
+    .where(
+      and(
+        eq(BeneficiaryOTP.nationalId, nationalId),
+        eq(BeneficiaryOTP.phoneNumber, phoneNumber),
+        isNull(BeneficiaryOTP.usedAt),
+        gt(BeneficiaryOTP.expiresAt, new Date()),
+      ),
+    );
+
+  await db.insert(BeneficiaryOTP).values({
+    nationalId,
+    phoneNumber,
+    code,
+    expiresAt,
+    ipAddress: options?.ipAddress,
+  });
+
+  return code;
+}
+
+/**
+ * Verify an OTP code for signup (without an account)
+ */
+export async function verifySignupOTP(
+  nationalId: string,
+  phoneNumber: string,
+  code: string,
+): Promise<boolean> {
+  const otp = await db.query.BeneficiaryOTP.findFirst({
+    where: and(
+      eq(BeneficiaryOTP.nationalId, nationalId),
+      eq(BeneficiaryOTP.phoneNumber, phoneNumber),
+      eq(BeneficiaryOTP.code, code),
+      gt(BeneficiaryOTP.expiresAt, new Date()),
+      isNull(BeneficiaryOTP.usedAt),
+    ),
+  });
+
+  if (!otp) {
+    return false;
+  }
+
+  // Mark OTP as used
+  await db
+    .update(BeneficiaryOTP)
+    .set({ usedAt: new Date() })
+    .where(eq(BeneficiaryOTP.id, otp.id));
+
+  return true;
+}

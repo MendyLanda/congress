@@ -12,6 +12,7 @@ import {
   createPasswordResetToken,
   createSession,
   createSessionToken,
+  createSignupOTP,
   deleteSession,
   getSession,
   hashPassword,
@@ -22,6 +23,7 @@ import {
   verifyOTP,
   verifyPassword,
   verifyPasswordResetToken,
+  verifySignupOTP,
 } from "@congress/auth/beneficiary";
 import { and, createID, eq, inArray, isNull, or } from "@congress/db";
 import { db } from "@congress/db/client";
@@ -43,6 +45,8 @@ import {
   beneficiaryOtpVerifySchema,
   beneficiaryPasswordResetRequestSchema,
   beneficiaryResetPasswordSchema,
+  beneficiarySignupOtpRequestSchema,
+  beneficiarySignupOtpVerifySchema,
   beneficiarySignupSchema,
 } from "@congress/validators";
 import {
@@ -494,9 +498,78 @@ export const beneficiaryAuthRouter = {
       };
     }),
 
+  sendSignupOTP: publicProcedure({ captcha: true })
+    .input(beneficiarySignupOtpRequestSchema)
+    .mutation(async ({ ctx, input }) => {
+      // Check if account already exists
+      const existingAccount = await db.query.BeneficiaryAccount.findFirst({
+        where: eq(BeneficiaryAccount.nationalId, input.nationalId),
+      });
+
+      if (existingAccount) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "An account with this national ID already exists",
+        });
+      }
+
+      const code = await createSignupOTP(input.nationalId, input.phoneNumber, {
+        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
+      });
+
+      await sendVoiceOTP({
+        to: input.phoneNumber,
+        code,
+      });
+
+      return {
+        success: true,
+        message:
+          "A verification code has been sent to your phone via voice call.",
+        phoneNumberMasked: maskPhoneNumber(input.phoneNumber),
+        devCode: env.NODE_ENV === "development" ? code : undefined,
+      };
+    }),
+
+  verifySignupOTP: publicProcedure({ captcha: true })
+    .input(beneficiarySignupOtpVerifySchema)
+    .mutation(async ({ input }) => {
+      const isValidOTP = await verifySignupOTP(
+        input.nationalId,
+        input.phoneNumber,
+        input.code,
+      );
+
+      if (!isValidOTP) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid or expired verification code",
+        });
+      }
+
+      return {
+        success: true,
+        message: "Phone number verified successfully.",
+      };
+    }),
+
   signup: publicProcedure({ captcha: true })
     .input(beneficiarySignupSchema)
     .mutation(async ({ ctx, input }) => {
+      // Verify OTP before creating account
+      const isValidOTP = await verifySignupOTP(
+        input.nationalId,
+        input.personalPhoneNumber,
+        input.otpCode,
+      );
+
+      if (!isValidOTP) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid or expired verification code",
+        });
+      }
+
       const accountId = await db.transaction(async (tx) => {
         const existingAccount = await tx.query.BeneficiaryAccount.findFirst({
           where: eq(BeneficiaryAccount.nationalId, input.nationalId),

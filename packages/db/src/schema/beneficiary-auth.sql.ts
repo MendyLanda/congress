@@ -111,14 +111,17 @@ export const BeneficiaryPasswordReset = createTable(
 /**
  * OTP (One-Time Password) table
  * Stores OTP codes for password setup/reset (sent via Twilio voice call)
+ * Also supports signup OTP verification (accountId can be null for signup)
  */
 export const BeneficiaryOTP = createTable(
   "beneficiary_otp",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
-    accountId: text("account_id")
-      .notNull()
-      .references(() => BeneficiaryAccount.id, { onDelete: "cascade" }),
+    accountId: text("account_id").references(() => BeneficiaryAccount.id, {
+      onDelete: "cascade",
+    }), // Nullable for signup OTP
+    nationalId: varchar("national_id", { length: 10 }), // For signup OTP (when accountId is null)
+    phoneNumber: varchar("phone_number", { length: 20 }), // For signup OTP (when accountId is null)
     personContactId: ulid("personContact").references(() => PersonContact.id, {
       onDelete: "cascade",
     }),
@@ -129,6 +132,7 @@ export const BeneficiaryOTP = createTable(
   },
   (table) => [
     index("beneficiary_otp_account_id_index").on(table.accountId),
+    index("beneficiary_otp_national_id_index").on(table.nationalId),
     index("beneficiary_otp_code_index").on(table.code),
     index("beneficiary_otp_expires_at_index").on(table.expiresAt),
   ],

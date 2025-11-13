@@ -120,6 +120,21 @@ export const beneficiaryOtpVerifySchema = z.object({
     .regex(/^\d{6}$/, { message: "otp_invalid" }),
 });
 
+export const beneficiarySignupOtpRequestSchema = z.object({
+  nationalId: zodIsraeliId,
+  phoneNumber: phoneNumberSchema,
+});
+
+export const beneficiarySignupOtpVerifySchema = z.object({
+  nationalId: zodIsraeliId,
+  phoneNumber: phoneNumberSchema,
+  code: z
+    .string()
+    .trim()
+    .length(6, { message: "otp_invalid" })
+    .regex(/^\d{6}$/, { message: "otp_invalid" }),
+});
+
 export const beneficiaryOtpChangePasswordSchema = z.object({
   nationalId: zodIsraeliId,
   code: z
@@ -157,6 +172,11 @@ export const beneficiarySignupSchema = z
     children: z.array(childSchema),
     identityCardUploadId: z.string().optional(),
     identityAppendixUploadId: z.string().optional(),
+    otpCode: z
+      .string()
+      .trim()
+      .length(6, { message: "otp_invalid" })
+      .regex(/^\d{6}$/, { message: "otp_invalid" }),
   })
   .superRefine((value, ctx) => {
     const age = calculateAge(value.dateOfBirth);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { fileTypeFromBuffer } from "file-type";
 import { FileIcon, Trash2Icon, UploadIcon, XIcon } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import SparkMD5 from "spark-md5";
@@ -44,6 +45,7 @@ export interface DocumentUploadProps {
     fileName: string;
     fileSize: number;
     base64Md5Hash: string;
+    contentType: string;
   }) => Promise<{
     url: string;
     fields: Record<string, string>;
@@ -102,6 +104,48 @@ interface FileUploadState {
   progress: number;
   status: "pending" | "uploading" | "success" | "error";
   error?: string;
+}
+
+/**
+ * Detect MIME type from file content using file-type library
+ * Always detects from content first to avoid relying on incorrect file.type
+ * Falls back to file.type if detection fails
+ */
+async function detectMimeType(file: File): Promise<string> {
+  return new Promise((resolve) => {
+    const fileReader = new FileReader();
+    // Read first 4100 bytes (file-type needs enough bytes for detection)
+    const blob = file.slice(0, 4100);
+
+    fileReader.onload = async (e) => {
+      if (!e.target?.result) {
+        resolve(file.type || "application/octet-stream");
+        return;
+      }
+
+      try {
+        const buffer = new Uint8Array(e.target.result as ArrayBuffer);
+        const fileType = await fileTypeFromBuffer(buffer);
+
+        if (fileType?.mime) {
+          resolve(fileType.mime);
+          return;
+        }
+      } catch (error) {
+        // If detection fails, fall back to file.type
+        console.warn("Failed to detect file type:", error);
+      }
+
+      // Fallback to file.type or default
+      resolve(file.type || "application/octet-stream");
+    };
+
+    fileReader.onerror = () => {
+      resolve(file.type || "application/octet-stream");
+    };
+
+    fileReader.readAsArrayBuffer(blob);
+  });
 }
 
 /**
@@ -246,8 +290,8 @@ export function DocumentUpload({
         );
       }
 
-      // Validate file type
-      const mimeType = file.type;
+      // Detect actual MIME type from file content (magic bytes)
+      const mimeType = await detectMimeType(file);
       const fileName = file.name;
       const extension = fileName.split(".").pop()?.toLowerCase();
 
@@ -282,6 +326,7 @@ export function DocumentUpload({
         fileName: file.name,
         fileSize: file.size,
         base64Md5Hash,
+        contentType: mimeType,
       });
 
       // Upload to S3

@@ -5,11 +5,7 @@ import z from "zod";
 import { createID, eq } from "@congress/db";
 import { db } from "@congress/db/client";
 import { DocumentType, Upload } from "@congress/db/schema";
-import {
-  deleteObject,
-  generatePresignedUploadUrl,
-  sanitizeKey,
-} from "@congress/s3";
+import { deleteObject, generatePresignedUploadUrl } from "@congress/s3";
 
 import { publicProcedure } from "../trpc";
 
@@ -21,10 +17,10 @@ export const uploadRouter = {
         fileName: z.string(),
         fileSize: z.number(),
         base64Md5Hash: z.string(),
+        contentType: z.string(), // Actual MIME type from the browser
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const mime = await import("mime-types");
       const typeis = await import("type-is");
 
       return await db.transaction(async (tx) => {
@@ -49,9 +45,14 @@ export const uploadRouter = {
           });
         }
 
-        // validate file type
-        const mimeType = mime.lookup(input.fileName);
-        const extension = mime.extension(mimeType || "");
+        const mimeType = input.contentType;
+        // Extract extension from the actual filename
+        const fileNameParts = input.fileName.split(".");
+        const extension =
+          fileNameParts.length > 1
+            ? fileNameParts[fileNameParts.length - 1]?.toLowerCase()
+            : null;
+        console.log("got extension", extension, "for mime type", mimeType);
         if (!mimeType || !extension) {
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -67,7 +68,7 @@ export const uploadRouter = {
         }
 
         const signedResponse = await generatePresignedUploadUrl({
-          key: `uploads/${ctx.session?.user.id ?? "anonymous"}/${documentType.id}/${uploadId}-${sanitizeKey(input.fileName)}/${documentType.name}.${extension}`,
+          key: `uploads/${ctx.session?.user.id ?? "anonymous"}/${documentType.id}/${uploadId}/${documentType.name}.${extension}`,
           maxUploadSizeInBytes: input.fileSize,
           metadata: {
             originalFileName: input.fileName,

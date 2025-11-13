@@ -294,23 +294,6 @@ function transformStreetRecord(
   };
 }
 
-// async function queryTopCitiesByStreetCount(limit = 100) {
-//   const results = await db
-//     .select({
-//       cityId: City.id,
-//       cityEnglishName: City.englishName,
-//       citySymbol: City.symbol,
-//       streetCount: sql<number>`COUNT(${Street.id})`.as("street_count"),
-//     })
-//     .from(City)
-//     .innerJoin(Street, eq(City.sourceId, Street.citySymbol))
-//     .groupBy(City.id, City.englishName, City.symbol)
-//     .orderBy(desc(sql<number>`COUNT(${Street.id})`))
-//     .limit(limit);
-
-//   return results;
-// }
-
 async function main() {
   console.log("Starting address seeding...");
 
