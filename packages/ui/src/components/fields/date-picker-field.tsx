@@ -9,7 +9,7 @@ interface DatePickerFieldProps {
 }
 
 export function DatePickerField({ label }: DatePickerFieldProps) {
-  const field = useFieldContext<string>();
+  const field = useFieldContext<string | undefined>();
   const form = useFormContext();
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
@@ -21,8 +21,8 @@ export function DatePickerField({ label }: DatePickerFieldProps) {
       </FieldContent>
       <DatePicker
         id={field.name}
-        value={field.state.value}
-        onChange={(date) => field.handleChange(date ?? "")}
+        value={field.state.value ?? undefined}
+        onChange={(date) => field.handleChange(date)}
         disabled={isSubmitting}
       />
       {isInvalid && <FieldError errors={field.state.meta.errors} />}

@@ -4,15 +4,15 @@ import i18n from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 
-import enTranslations from "../../../../locals/en/translation.json";
-import heTranslations from "../../../../locals/he/translation.json";
+import enTranslation from "../../../../locals/en/translation.json";
+import heTranslation from "../../../../locals/he/translation.json";
 
 export const resources = {
   en: {
-    translation: enTranslations,
+    translation: enTranslation,
   },
   he: {
-    translation: heTranslations,
+    translation: heTranslation,
   },
 } as const;
 
@@ -26,8 +26,8 @@ void i18n
   .init({
     resources,
     defaultNS,
-    fallbackLng: "en",
-    supportedLngs: ["en", "he"],
+    fallbackLng: "he",
+    supportedLngs: ["he", "en"],
     detection: {
       order: ["cookie"],
       lookupCookie: i18nCookieName,

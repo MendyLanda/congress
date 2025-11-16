@@ -50,6 +50,7 @@
     "@congress/prettier-config": "workspace:*",
     "@congress/tsconfig": "workspace:*",
     "eslint": "catalog:",
+    "i18next": "^25.6.2",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },

@@ -1,5 +1,6 @@
 "use client";
 
+import type { Month } from "date-fns";
 import type { DayButton } from "react-day-picker";
 import * as React from "react";
 import {
@@ -7,7 +8,14 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "lucide-react";
-import { DayPicker, getDefaultClassNames } from "react-day-picker";
+import {
+  DayPicker,
+  getDefaultClassNames,
+  MonthsDropdown,
+  YearsDropdown,
+} from "react-day-picker";
+import { enUS, he, ru } from "react-day-picker/locale";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "../lib/utils";
 import { Button, buttonVariants } from "./button";
@@ -25,22 +33,40 @@ function Calendar({
   buttonVariant?: React.ComponentProps<typeof Button>["variant"];
 }) {
   const defaultClassNames = getDefaultClassNames();
+  const { i18n } = useTranslation();
+  const language = i18n.language;
+  const locale = React.useMemo(() => {
+    const heDefault = { locale: he, minMonthWidth: 88 };
+    if (language === "he") return heDefault;
+    if (language.startsWith("en")) return { locale: enUS, minMonthWidth: 86 };
+    if (language.startsWith("ru")) return { locale: ru, minMonthWidth: 88.5 };
+    return heDefault;
+  }, [language]);
 
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn(
-        "bg-background group/calendar p-3 [--cell-size:--spacing(8)] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
+        "bg-background group/calendar p-3 [--cell-size:--spacing(8)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className,
       )}
+      dir={i18n.dir()}
+      locale={locale.locale}
       captionLayout={captionLayout}
       formatters={{
-        formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
+        formatMonthDropdown: (date) => {
+          const monthNumber = date.getMonth() as Month;
+          return `${monthNumber + 1} - ${locale.locale.localize.month(monthNumber, { width: "abbreviated" })}`;
+        },
         ...formatters,
       }}
+      style={
+        {
+          "--min-month-width": `${locale.minMonthWidth}px`,
+        } as React.CSSProperties
+      }
       classNames={{
         root: cn("w-fit", defaultClassNames.root),
         months: cn(
@@ -72,6 +98,9 @@ function Calendar({
         ),
         dropdown_root: cn(
           "has-focus:border-ring border-input has-focus:ring-ring/50 relative rounded-md border shadow-xs has-focus:ring-[3px]",
+          `has-[select[data-month-dropdown='true']]:min-w-(--min-month-width)`,
+          `has-[select[data-year-dropdown='true']]:min-w-(67.45px)`,
+
           defaultClassNames.dropdown_root,
         ),
         dropdown: cn(
@@ -139,6 +168,12 @@ function Calendar({
             />
           );
         },
+        MonthsDropdown: (props) => (
+          <MonthsDropdown {...props} data-month-dropdown={true} />
+        ),
+        YearsDropdown: (props) => (
+          <YearsDropdown {...props} data-year-dropdown={true} />
+        ),
         Chevron: ({ className, orientation, ...props }) => {
           if (orientation === "left") {
             return (

@@ -8,6 +8,7 @@ interface TextFieldProps {
   type?: string;
   readOnly?: boolean;
   className?: string;
+  tabIndex?: number;
 }
 
 export function TextField({
@@ -16,6 +17,7 @@ export function TextField({
   type = "text",
   readOnly,
   className,
+  tabIndex,
 }: TextFieldProps) {
   const field = useFieldContext<string>();
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
@@ -34,6 +36,7 @@ export function TextField({
         placeholder={placeholder}
         readOnly={readOnly}
         className={className}
+        tabIndex={tabIndex}
       />
       {isInvalid && <FieldError errors={field.state.meta.errors} />}
     </Field>

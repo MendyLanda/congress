@@ -15,6 +15,7 @@ import {
 } from "@congress/ui/field";
 import { Input } from "@congress/ui/input";
 import { Label } from "@congress/ui/label";
+import { LanguageSwitcher } from "@congress/ui/language-switcher";
 import { toast } from "@congress/ui/toast";
 import {
   beneficiaryIdLookupSchema,
@@ -55,7 +56,7 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginRouteComponent() {
-  const { t } = useTranslation();
+  const { t } = useTranslation("login");
   const navigate = useNavigate();
   const initialSearch = Route.useSearch();
   const trpc = useTRPC();
@@ -305,23 +306,27 @@ function LoginRouteComponent() {
   }
 
   return (
-    <main className="bg-background flex min-h-screen justify-between gap-12 overflow-x-hidden px-4 py-12">
-      <section className="flex w-full flex-col items-center justify-center gap-8">
-        {/* Logo Section */}
-        <div className="flex flex-col items-center gap-4 text-center">
-          <img
-            src="/square-logo.svg"
-            alt={t("beneficiary_logo_alt")}
-            className="size-48"
-          />
+    <main className="bg-foreground flex min-h-screen justify-between gap-12 overflow-x-hidden px-8 py-4">
+      <section className="relative flex w-full flex-col items-center justify-center gap-8">
+        {/* Language Switcher */}
+        <div className="absolute start-0 top-0">
+          <LanguageSwitcher />
         </div>
+        {/* Logo */}
+        <img
+          src="/square-logo.svg"
+          alt={t("beneficiary_logo_alt")}
+          className="size-48"
+        />
 
         {/* Greeting */}
-        <h2 className="text-4xl font-normal">{t("good_to_see_you")}</h2>
+        <h2 className="text-background text-4xl font-normal">
+          {t("good_to_see_you")}
+        </h2>
         {/* Login Form */}
         {step === "identify" && (
           <form
-            className="flex w-full max-w-sm flex-col gap-6"
+            className="flex w-full max-w-sm flex-col gap-4"
             onSubmit={(event) => {
               event.preventDefault();
               void idForm.handleSubmit();
@@ -334,7 +339,9 @@ function LoginRouteComponent() {
                   field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor={field.name}>{t("national_id")}</Label>
+                    <Label className="text-background" htmlFor={field.name}>
+                      {t("enter_id_label")}
+                    </Label>
                     <Input
                       id={field.name}
                       name={field.name}
@@ -344,21 +351,22 @@ function LoginRouteComponent() {
                         field.handleChange(event.target.value)
                       }
                       autoComplete="off"
-                      placeholder={t("enter_national_id")}
+                      placeholder={t("enter_id_placeholder")}
+                      inputMode="numeric"
                       aria-invalid={isInvalid}
                       disabled={idFormSubmitting || isBusy}
-                      className="border-foreground text-center"
+                      className="border-background focus-visible:border-accent focus-visible:ring-accent/50 text-background text-center aria-invalid:border-[#efa5a5] aria-invalid:text-[#efa5a5]"
                     />
                     {isInvalid && (
                       <FieldError
                         errors={field.state.meta.errors.map((error) =>
                           typeof error === "string"
-                            ? { message: error }
+                            ? { message: t(error) }
                             : error?.message
-                              ? { message: error.message }
+                              ? { message: t(error.message) }
                               : undefined,
                         )}
-                        className="text-center"
+                        className="text-center text-[#efa5a5]"
                       />
                     )}
                   </div>
@@ -367,11 +375,11 @@ function LoginRouteComponent() {
             />
             <Button
               type="submit"
-              className="w-full"
+              className="text-foreground bg-background hover:bg-accent focus-visible:ring-accent/50 focus-visible:border-accent w-full cursor-pointer focus-visible:border focus-visible:ring-[3px]"
               size="lg"
               disabled={idFormSubmitting || isBusy}
             >
-              {idFormSubmitting ? t("checking") : t("login")}
+              {idFormSubmitting ? t("checking") : t("login_button")}
             </Button>
           </form>
         )}

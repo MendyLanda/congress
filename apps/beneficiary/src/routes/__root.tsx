@@ -33,7 +33,7 @@ export const Route = createRootRouteWithContext<{
   head: () => ({
     meta: [
       { name: "font-family", content: "Rubik Variable" },
-      { charset: "utf-8" },
+      { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
@@ -66,8 +66,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           {children}
           <div className="absolute right-4 bottom-12"></div>
           <Toaster />
-          <TanStackDevtools plugins={[FormDevtoolsPlugin()]} />
-          <TanStackRouterDevtools position="bottom-right" />
+          {/* <TanStackDevtools plugins={[FormDevtoolsPlugin()]} />
+          <TanStackRouterDevtools position="bottom-right" /> */}
           <Scripts />
         </body>
       </html>
@@ -82,7 +82,7 @@ function NotFoundComponent() {
     <div className="flex min-h-screen flex-col items-center justify-center">
       <h1 className="text-4xl font-bold">404</h1>
       <p className="text-muted-foreground mt-4 text-lg">
-        {t("common:notFound", "Page not found")}
+        {t("notFound", "Page not found")}
       </p>
     </div>
   );
