@@ -1,5 +1,6 @@
-import { Field, FieldContent, FieldError, FieldLabel } from "../field";
+import { Field, FieldError } from "../field";
 import { Input } from "../input";
+import { FloatingField } from "./floating-field";
 import { useFieldContext } from "./form-context";
 
 interface TextFieldProps {
@@ -24,20 +25,19 @@ export function TextField({
 
   return (
     <Field data-invalid={isInvalid}>
-      <FieldContent>
-        <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-      </FieldContent>
-      <Input
-        id={field.name}
-        type={type}
-        value={field.state.value}
-        onBlur={field.handleBlur}
-        onChange={(event) => field.handleChange(event.target.value)}
-        placeholder={placeholder}
-        readOnly={readOnly}
-        className={className}
-        tabIndex={tabIndex}
-      />
+      <FloatingField label={label} htmlFor={field.name}>
+        <Input
+          id={field.name}
+          type={type}
+          value={field.state.value}
+          onBlur={field.handleBlur}
+          onChange={(event) => field.handleChange(event.target.value)}
+          placeholder={placeholder ?? " "}
+          readOnly={readOnly}
+          className={className}
+          tabIndex={tabIndex}
+        />
+      </FloatingField>
       {isInvalid && <FieldError errors={field.state.meta.errors} />}
     </Field>
   );

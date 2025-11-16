@@ -1,6 +1,6 @@
 import { useStore } from "@tanstack/react-form";
 
-import { Field, FieldContent, FieldError, FieldLabel } from "../field";
+import { Field, FieldError } from "../field";
 import {
   Select,
   SelectContent,
@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../select";
+import { FloatingField } from "./floating-field";
 import { useFieldContext, useFormContext } from "./form-context";
 
 interface SelectFieldOption<T extends string> {
@@ -33,25 +34,24 @@ export function SelectField<T extends string>({
 
   return (
     <Field data-invalid={isInvalid}>
-      <FieldContent>
-        <FieldLabel>{label}</FieldLabel>
-      </FieldContent>
-      <Select
-        value={field.state.value}
-        disabled={isSubmitting}
-        onValueChange={(value: T) => field.handleChange(value)}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+			<FloatingField label={label} filled={!!field.state.value}>
+				<Select
+					value={field.state.value}
+					disabled={isSubmitting}
+					onValueChange={(value: T) => field.handleChange(value)}
+				>
+					<SelectTrigger className="w-full">
+						<SelectValue placeholder={placeholder} />
+					</SelectTrigger>
+					<SelectContent>
+						{options.map((option) => (
+							<SelectItem key={option.value} value={option.value}>
+								{option.label}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</FloatingField>
       {isInvalid && <FieldError errors={field.state.meta.errors} />}
     </Field>
   );

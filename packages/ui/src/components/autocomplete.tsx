@@ -96,6 +96,7 @@ export function AutoComplete<T extends string>({
         <Command shouldFilter={false}>
           <PopoverAnchor asChild>
             <CommandPrimitive.Input
+              className="bg-background"
               asChild
               value={searchValue}
               disabled={disabled}

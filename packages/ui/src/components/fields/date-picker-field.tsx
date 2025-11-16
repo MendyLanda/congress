@@ -1,7 +1,8 @@
 import { useStore } from "@tanstack/react-form";
 
 import { DatePicker } from "../date-picker";
-import { Field, FieldContent, FieldError, FieldLabel } from "../field";
+import { Field, FieldError } from "../field";
+import { FloatingField } from "./floating-field";
 import { useFieldContext, useFormContext } from "./form-context";
 
 interface DatePickerFieldProps {
@@ -16,15 +17,20 @@ export function DatePickerField({ label }: DatePickerFieldProps) {
 
   return (
     <Field data-invalid={isInvalid}>
-      <FieldContent>
-        <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-      </FieldContent>
-      <DatePicker
-        id={field.name}
-        value={field.state.value ?? undefined}
-        onChange={(date) => field.handleChange(date)}
-        disabled={isSubmitting}
-      />
+      <FloatingField
+        label={label}
+        filled={!!field.state.value}
+        htmlFor={field.name}
+      >
+        <DatePicker
+          id={field.name}
+          value={field.state.value ?? undefined}
+          onChange={(date) => field.handleChange(date)}
+          disabled={isSubmitting}
+          placeholder={" "}
+          className="w-full"
+        />
+      </FloatingField>
       {isInvalid && <FieldError errors={field.state.meta.errors} />}
     </Field>
   );

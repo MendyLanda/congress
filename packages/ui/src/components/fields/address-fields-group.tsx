@@ -6,14 +6,9 @@ import { useDebounceValue } from "usehooks-ts";
 
 import { useTRPC } from "../../lib/trpc";
 import { AutoComplete } from "../autocomplete";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "../field";
+import { Field, FieldError, FieldGroup } from "../field";
 import { Input } from "../input";
+import { FloatingField } from "./floating-field";
 import { withFieldGroup } from "./form-context";
 
 interface AddressFields {
@@ -102,27 +97,26 @@ export const AddressFieldsGroup = withFieldGroup({
                 field.state.meta.isTouched && !field.state.meta.isValid;
               return (
                 <Field data-invalid={isInvalid}>
-                  <FieldContent>
-                    <FieldLabel>{t("city")}</FieldLabel>
-                  </FieldContent>
-                  <AutoComplete
-                    selectedValue={cityId ? String(cityId) : ""}
-                    onSearchValueChange={setCitySearch}
-                    onSelectedValueChange={(value: string) => {
-                      const newCityId = value
-                        ? Number.parseInt(value, 10)
-                        : undefined;
+                  <FloatingField label={t("city")} filled={Boolean(cityId)}>
+                    <AutoComplete
+                      selectedValue={cityId ? String(cityId) : ""}
+                      onSearchValueChange={setCitySearch}
+                      onSelectedValueChange={(value: string) => {
+                        const newCityId = value
+                          ? Number.parseInt(value, 10)
+                          : undefined;
 
-                      group.setFieldValue("cityId", newCityId);
-                      group.setFieldValue("streetId", undefined);
-                      setStreetSearch("");
-                    }}
-                    items={citiesQuery.data ?? []}
-                    isLoading={citiesQuery.isLoading}
-                    emptyMessage={t("no_cities_found")}
-                    placeholder={t("select_city_placeholder")}
-                    disabled={isSubmitting}
-                  />
+                        group.setFieldValue("cityId", newCityId);
+                        group.setFieldValue("streetId", undefined);
+                        setStreetSearch("");
+                      }}
+                      items={citiesQuery.data ?? []}
+                      isLoading={citiesQuery.isLoading}
+                      emptyMessage={t("no_cities_found")}
+                      placeholder={" "}
+                      disabled={isSubmitting}
+                    />
+                  </FloatingField>
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );
@@ -134,33 +128,32 @@ export const AddressFieldsGroup = withFieldGroup({
                 field.state.meta.isTouched && !field.state.meta.isValid;
               return (
                 <Field data-invalid={isInvalid}>
-                  <FieldContent>
-                    <FieldLabel>{t("street")}</FieldLabel>
-                  </FieldContent>
-                  {selectedCity?.code ? (
-                    <AutoComplete
-                      selectedValue={streetId ? String(streetId) : ""}
-                      onSearchValueChange={setStreetSearch}
-                      onSelectedValueChange={(value: string) => {
-                        group.setFieldValue(
-                          "streetId",
-                          value ? Number.parseInt(value, 10) : undefined,
-                        );
-                      }}
-                      items={streetsQuery.data ?? []}
-                      isLoading={streetsQuery.isLoading}
-                      emptyMessage={t("no_streets_found")}
-                      placeholder={t("select_street_placeholder")}
-                      disabled={isSubmitting}
-                    />
-                  ) : (
-                    <Input
-                      onBlur={field.handleBlur}
-                      autoComplete="rutjfkde"
-                      disabled={true}
-                      placeholder={t("street_select_a_city_first")}
-                    />
-                  )}
+                  <FloatingField label={t("street")} filled={Boolean(streetId)}>
+                    {selectedCity?.code ? (
+                      <AutoComplete
+                        selectedValue={streetId ? String(streetId) : ""}
+                        onSearchValueChange={setStreetSearch}
+                        onSelectedValueChange={(value: string) => {
+                          group.setFieldValue(
+                            "streetId",
+                            value ? Number.parseInt(value, 10) : undefined,
+                          );
+                        }}
+                        items={streetsQuery.data ?? []}
+                        isLoading={streetsQuery.isLoading}
+                        emptyMessage={t("no_streets_found")}
+                        placeholder={" "}
+                        disabled={isSubmitting}
+                      />
+                    ) : (
+                      <Input
+                        onBlur={field.handleBlur}
+                        autoComplete="rutjfkde"
+                        disabled={true}
+                        placeholder={" "}
+                      />
+                    )}
+                  </FloatingField>
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );
