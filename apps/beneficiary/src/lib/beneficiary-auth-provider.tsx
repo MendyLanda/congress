@@ -1,10 +1,8 @@
 import { createContext, useCallback, useContext } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouteContext } from "@tanstack/react-router";
 
 import type { RouterOutputs } from "@congress/api";
-
-import { useTRPC } from "./trpc";
 
 type BeneficiarySession = RouterOutputs["beneficiaryAuth"]["getSession"];
 
@@ -39,7 +37,7 @@ export function BeneficiaryAuthProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const trpc = useTRPC();
+  const { orpc } = useRouteContext({ from: "__root__" });
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -50,7 +48,7 @@ export function BeneficiaryAuthProvider({
     isLoading,
     refetch: refetchSession,
   } = useQuery({
-    ...trpc.beneficiaryAuth.getSession.queryOptions(undefined),
+    ...orpc.beneficiaryAuth.getSession.queryOptions(),
     enabled: cookieExists, // Only run query if cookie exists
     retry: false, // Don't retry if there's no session
     retryOnMount: false, // Don't retry on mount if there's no session
@@ -61,12 +59,12 @@ export function BeneficiaryAuthProvider({
 
   // Sign out mutation
   const logoutMutation = useMutation(
-    trpc.beneficiaryAuth.logout.mutationOptions({
+    orpc.beneficiaryAuth.logout.mutationOptions({
       onSuccess: async () => {
         // Invalidate session query
-        await queryClient.invalidateQueries(
-          trpc.beneficiaryAuth.getSession.pathFilter(),
-        );
+        await queryClient.invalidateQueries({
+          queryKey: [["beneficiaryAuth", "getSession"]],
+        });
         // Navigate to home
         await navigate({ href: "/", replace: true });
       },
@@ -74,7 +72,7 @@ export function BeneficiaryAuthProvider({
   );
 
   const signOut = useCallback(async () => {
-    await logoutMutation.mutateAsync();
+    await logoutMutation.mutateAsync(undefined);
   }, [logoutMutation]);
 
   const refetchSessionCallback = useCallback(async () => {

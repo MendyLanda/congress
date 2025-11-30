@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useDebounceValue } from "usehooks-ts";
 
-import { useTRPC } from "../../lib/trpc";
+import { orpc } from "../../lib/orpc";
 import { AutoComplete } from "../autocomplete";
 import { Field, FieldError, FieldGroup } from "../field";
 import { Input } from "../input";
@@ -34,7 +34,6 @@ export const AddressFieldsGroup = withFieldGroup({
   },
   render: function Render({ group, title }) {
     const { t } = useTranslation();
-    const trpc = useTRPC();
 
     const [citySearch, setCitySearch] = useDebounceValue("", 300);
     const [streetSearch, setStreetSearch] = useDebounceValue("", 300);
@@ -48,19 +47,17 @@ export const AddressFieldsGroup = withFieldGroup({
     );
 
     const citiesQuery = useQuery(
-      trpc.location.cities.queryOptions(
-        { search: citySearch || undefined },
-        {
-          enabled: true,
-          select: (data) =>
-            data.map((city) => ({
-              value: String(city.id),
-              label: city.nameHe,
-              code: city.code,
-            })),
-          staleTime: 1000 * 60 * 60,
-        },
-      ),
+      orpc.location.cities.queryOptions({
+        input: { search: citySearch || undefined },
+        enabled: true,
+        select: (data) =>
+          data.map((city) => ({
+            value: String(city.id),
+            label: city.nameHe,
+            code: city.code,
+          })),
+        staleTime: 1000 * 60 * 60,
+      }),
     );
 
     const selectedCity = useMemo(() => {
@@ -70,21 +67,19 @@ export const AddressFieldsGroup = withFieldGroup({
     }, [citiesQuery.data, cityId]);
 
     const streetsQuery = useQuery(
-      trpc.location.streets.queryOptions(
-        {
+      orpc.location.streets.queryOptions({
+        input: {
           cityCode: selectedCity?.code || 0,
           search: streetSearch || undefined,
         },
-        {
-          enabled: Boolean(selectedCity?.code),
-          select: (data) =>
-            data.map((street) => ({
-              value: String(street.id),
-              label: street.nameHe,
-            })),
-          staleTime: 1000 * 60 * 60,
-        },
-      ),
+        enabled: Boolean(selectedCity?.code),
+        select: (data) =>
+          data.map((street) => ({
+            value: String(street.id),
+            label: street.nameHe,
+          })),
+        staleTime: 1000 * 60 * 60,
+      }),
     );
 
     return (

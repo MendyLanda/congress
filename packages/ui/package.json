@@ -68,7 +68,7 @@
     "./tooltip": "./src/components/tooltip.tsx",
     "./upload": "./src/components/upload.tsx",
     "./date-picker": "./src/components/date-picker.tsx",
-    "./trpc": "./src/lib/trpc.ts",
+    "./orpc": "./src/lib/orpc.ts",
     "./url": "./src/lib/url.ts"
   },
   "scripts": {
@@ -102,7 +102,6 @@
     "recharts": "2.15.4",
     "sonner": "^2.0.7",
     "spark-md5": "^3.0.2",
-    "superjson": "catalog:",
     "tailwind-merge": "^3.3.1",
     "usehooks-ts": "^3.1.1",
     "vaul": "^1.1.2"

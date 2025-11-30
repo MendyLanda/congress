@@ -15,13 +15,13 @@ import { Input } from "@congress/ui/input";
 import { toast } from "@congress/ui/toast";
 
 import { useBeneficiaryAuth } from "~/lib/beneficiary-auth-provider";
-import { useTRPC } from "~/lib/trpc";
+import { useRouteContext } from "@tanstack/react-router";
 
 type LoginStep = "nationalId" | "password" | "otp" | "setPassword" | "signup";
 
 export function BeneficiaryLoginFlow() {
   const { t } = useTranslation();
-  const trpc = useTRPC();
+  const { orpc } = useRouteContext({ from: "__root__" });
   const navigate = useNavigate();
   const { refetchSession } = useBeneficiaryAuth();
   const [step, setStep] = useState<LoginStep>("nationalId");
@@ -40,7 +40,7 @@ export function BeneficiaryLoginFlow() {
 
   // Check account status mutation
   const checkNationalIdMutation = useMutation(
-    trpc.beneficiaryAuth.checkNationalId.mutationOptions({
+    orpc.beneficiaryAuth.checkNationalId.mutationOptions({
       onSuccess: (data: CheckNationalIdResult) => {
         if (!data.exists) {
           // No account exists, show signup form
@@ -60,7 +60,7 @@ export function BeneficiaryLoginFlow() {
   );
 
   const sendOTPMutation = useMutation(
-    trpc.beneficiaryAuth.sendOTP.mutationOptions({
+    orpc.beneficiaryAuth.sendOTP.mutationOptions({
       onSuccess: (data) => {
         setPhoneNumberMasked(data.phoneNumberMasked);
         setStep("otp");
@@ -76,7 +76,7 @@ export function BeneficiaryLoginFlow() {
   );
 
   const verifyOTPMutation = useMutation(
-    trpc.beneficiaryAuth.verifyOTPAndSetPassword.mutationOptions({
+    orpc.beneficiaryAuth.verifyOTPAndSetPassword.mutationOptions({
       onSuccess: async (data) => {
         toast.success(data.message);
         await refetchSession();
@@ -89,7 +89,7 @@ export function BeneficiaryLoginFlow() {
   );
 
   const loginMutation = useMutation(
-    trpc.beneficiaryAuth.login.mutationOptions({
+    orpc.beneficiaryAuth.login.mutationOptions({
       onSuccess: async () => {
         toast.success(t("logged_in_successfully"));
         await refetchSession();

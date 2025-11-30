@@ -20,6 +20,9 @@
     "@congress/transactional": "workspace:^",
     "@congress/ui": "workspace:*",
     "@fontsource-variable/rubik": "^5.2.8",
+    "@orpc/client": "catalog:",
+    "@orpc/server": "catalog:",
+    "@orpc/tanstack-query": "catalog:",
     "@t3-oss/env-core": "^0.13.8",
     "@tanstack/react-devtools": "^0.8.1",
     "@tanstack/react-form": "catalog:",
@@ -29,9 +32,6 @@
     "@tanstack/react-router-devtools": "^1.133.28",
     "@tanstack/react-router-ssr-query": "^1.133.28",
     "@tanstack/react-start": "^1.133.29",
-    "@trpc/client": "catalog:",
-    "@trpc/server": "catalog:",
-    "@trpc/tanstack-react-query": "catalog:",
     "better-auth": "catalog:",
     "i18next": "catalog:",
     "i18next-browser-languagedetector": "catalog:",
@@ -40,7 +40,6 @@
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-i18next": "catalog:",
-    "superjson": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -1,5 +1,4 @@
-import type { TRPCRouterRecord } from "@trpc/server";
-import { TRPCError } from "@trpc/server";
+import { ORPCError } from "@orpc/server";
 import z from "zod";
 
 import { createID, eq } from "@congress/db";
@@ -7,7 +6,7 @@ import { db } from "@congress/db/client";
 import { DocumentType, Upload } from "@congress/db/schema";
 import { deleteObject, generatePresignedUploadUrl } from "@congress/s3";
 
-import { publicProcedure } from "../trpc";
+import { publicProcedure } from "../orpc";
 
 export const uploadRouter = {
   requestUploadUrl: publicProcedure({ captcha: false })
@@ -20,7 +19,7 @@ export const uploadRouter = {
         contentType: z.string(), // Actual MIME type from the browser
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       const typeis = await import("type-is");
 
       return await db.transaction(async (tx) => {
@@ -31,16 +30,14 @@ export const uploadRouter = {
         });
 
         if (!documentType) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
+          throw new ORPCError("NOT_FOUND", {
             message: "unknown_document_type",
           });
         }
 
         // validate file size
         if (input.fileSize > documentType.maxFileSize) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
+          throw new ORPCError("BAD_REQUEST", {
             message: "file_size_too_large",
           });
         }
@@ -54,21 +51,19 @@ export const uploadRouter = {
             : null;
         console.log("got extension", extension, "for mime type", mimeType);
         if (!mimeType || !extension) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
+          throw new ORPCError("BAD_REQUEST", {
             message: "invalid_file_type",
           });
         }
         const isAllowed = typeis.is(mimeType, documentType.allowedFileTypes);
         if (!isAllowed) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
+          throw new ORPCError("BAD_REQUEST", {
             message: "invalid_file_type",
           });
         }
 
         const signedResponse = await generatePresignedUploadUrl({
-          key: `uploads/${ctx.session?.user.id ?? "anonymous"}/${documentType.id}/${uploadId}/${documentType.name}.${extension}`,
+          key: `uploads/${context.session?.user.id ?? "anonymous"}/${documentType.id}/${uploadId}/${documentType.name}.${extension}`,
           maxUploadSizeInBytes: input.fileSize,
           metadata: {
             originalFileName: input.fileName,
@@ -86,8 +81,8 @@ export const uploadRouter = {
           base64Md5Hash: input.base64Md5Hash,
           bucket: signedResponse.bucket,
           storageKey: signedResponse.storageKey,
-          uploadedByUserId: ctx.session?.user.id,
-          uploadedByBeneficiaryAccountId: ctx.beneficiarySession?.accountId,
+          uploadedByUserId: context.session?.user.id,
+          uploadedByBeneficiaryAccountId: context.beneficiarySession?.accountId,
           objectUrl: signedResponse.objectUrl,
           public: false,
           status: "pending",
@@ -102,7 +97,7 @@ export const uploadRouter = {
     }),
   cancelUpload: publicProcedure({ captcha: false })
     .input(z.object({ uploadId: z.string() }))
-    .mutation(async ({ input }) => {
+    .handler(async ({ input }) => {
       const [upload] = await db
         .update(Upload)
         .set({ status: "cancelled" })
@@ -120,4 +115,4 @@ export const uploadRouter = {
 
       return { success: true };
     }),
-} satisfies TRPCRouterRecord;
+};

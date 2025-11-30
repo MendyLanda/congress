@@ -1,5 +1,3 @@
-import type { TRPCRouterRecord } from "@trpc/server";
-
 import { and, asc, desc, eq, ilike, sql, trgm } from "@congress/db";
 import { db } from "@congress/db/client";
 import { City, Street } from "@congress/db/schema";
@@ -9,12 +7,12 @@ import {
 } from "@congress/validators/location";
 import { normalizeHebrew } from "@congress/validators/utils";
 
-import { publicProcedure } from "../trpc";
+import { publicProcedure } from "../orpc";
 
 export const locationRouter = {
   cities: publicProcedure({ captcha: false })
     .input(citySearchSchema)
-    .query(async ({ input }) => {
+    .handler(async ({ input }) => {
       const hasSearch = !!input.search?.trim();
       const isShortQuery = hasSearch && (input.search?.length ?? 0) <= 2;
 
@@ -47,7 +45,7 @@ export const locationRouter = {
     }),
   streets: publicProcedure({ captcha: false })
     .input(streetSearchSchema)
-    .query(async ({ input }) => {
+    .handler(async ({ input }) => {
       const hasSearch = !!input.search?.trim();
       const isShortQuery = hasSearch && (input.search?.length ?? 0) <= 2;
 
@@ -78,4 +76,4 @@ export const locationRouter = {
 
       return data;
     }),
-} satisfies TRPCRouterRecord;
+};

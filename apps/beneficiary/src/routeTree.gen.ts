@@ -13,7 +13,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthLayoutRouteImport } from './routes/_auth-layout'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc.$'
+import { Route as ApiOrpcSplatRouteImport } from './routes/api/orpc.$'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -34,9 +34,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
-  id: '/api/trpc/$',
-  path: '/api/trpc/$',
+const ApiOrpcSplatRoute = ApiOrpcSplatRouteImport.update({
+  id: '/api/orpc/$',
+  path: '/api/orpc/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -44,13 +44,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/api/orpc/$': typeof ApiOrpcSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/api/orpc/$': typeof ApiOrpcSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -58,14 +58,14 @@ export interface FileRoutesById {
   '/_auth-layout': typeof AuthLayoutRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/api/orpc/$': typeof ApiOrpcSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup' | '/api/trpc/$'
+  fullPaths: '/' | '/login' | '/signup' | '/api/orpc/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/api/trpc/$'
-  id: '__root__' | '/' | '/_auth-layout' | '/login' | '/signup' | '/api/trpc/$'
+  to: '/' | '/login' | '/signup' | '/api/orpc/$'
+  id: '__root__' | '/' | '/_auth-layout' | '/login' | '/signup' | '/api/orpc/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -73,7 +73,7 @@ export interface RootRouteChildren {
   AuthLayoutRoute: typeof AuthLayoutRoute
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
-  ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
+  ApiOrpcSplatRoute: typeof ApiOrpcSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -106,11 +106,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/trpc/$': {
-      id: '/api/trpc/$'
-      path: '/api/trpc/$'
-      fullPath: '/api/trpc/$'
-      preLoaderRoute: typeof ApiTrpcSplatRouteImport
+    '/api/orpc/$': {
+      id: '/api/orpc/$'
+      path: '/api/orpc/$'
+      fullPath: '/api/orpc/$'
+      preLoaderRoute: typeof ApiOrpcSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -121,7 +121,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthLayoutRoute: AuthLayoutRoute,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
-  ApiTrpcSplatRoute: ApiTrpcSplatRoute,
+  ApiOrpcSplatRoute: ApiOrpcSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

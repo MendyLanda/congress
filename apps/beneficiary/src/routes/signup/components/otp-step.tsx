@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { useRouteContext } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import type { AppForm } from "@congress/ui/fields";
@@ -12,7 +13,6 @@ import {
 } from "@congress/ui/field";
 import { Input } from "@congress/ui/input";
 import { toast } from "@congress/ui/toast";
-import { useTRPC } from "@congress/ui/trpc";
 
 interface OtpStepProps {
   otpForm: AppForm;
@@ -25,10 +25,10 @@ interface OtpStepProps {
 
 export function OtpStep({ otpForm, formData, setStep }: OtpStepProps) {
   const { t } = useTranslation();
-  const trpc = useTRPC();
+  const { orpc } = useRouteContext({ from: "__root__" });
 
   const sendSignupOtpMutation = useMutation(
-    trpc.beneficiaryAuth.sendSignupOTP.mutationOptions({}),
+    orpc.beneficiaryAuth.sendSignupOTP.mutationOptions(),
   );
 
   return (

@@ -1,6 +1,5 @@
 /// <reference types="vite/client" />
 import type { QueryClient } from "@tanstack/react-query";
-import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type * as React from "react";
 import {
   createRootRouteWithContext,
@@ -15,12 +14,13 @@ import { useTranslation } from "react-i18next";
 import type { AppRouter } from "@congress/api";
 import { Toaster } from "@congress/ui/toast";
 
+import type { orpc } from "~/lib/orpc";
 import { setSSRLanguage } from "~/lib/i18n";
 import appCss from "~/styles.css?url";
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
-  trpc: TRPCOptionsProxy<AppRouter>;
+  orpc: typeof orpc;
 }>()({
   beforeLoad: async () => {
     await setSSRLanguage();

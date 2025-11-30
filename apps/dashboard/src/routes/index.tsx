@@ -5,7 +5,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import type { RouterOutputs } from "@congress/api";
@@ -23,15 +23,14 @@ import { Input } from "@congress/ui/input";
 import { toast } from "@congress/ui/toast";
 
 import { AuthShowcase } from "~/component/auth-showcase";
-import { useTRPC } from "~/lib/trpc";
 
 const DISABLE_POST_LIST = true as boolean;
 
 export const Route = createFileRoute("/")({
   loader: ({ context }) => {
     if (DISABLE_POST_LIST) return;
-    const { trpc, queryClient } = context;
-    void queryClient.prefetchQuery(trpc.post.all.queryOptions());
+    const { orpc, queryClient } = context;
+    void queryClient.prefetchQuery(orpc.post.all.queryOptions());
   },
   component: RouteComponent,
 });
@@ -71,18 +70,19 @@ function RouteComponent() {
 
 function CreatePostForm() {
   const { t } = useTranslation();
-  const trpc = useTRPC();
+  const { orpc } = useRouteContext({ from: "/" });
 
   const queryClient = useQueryClient();
   const createPost = useMutation(
-    trpc.post.create.mutationOptions({
+    orpc.post.create.mutationOptions({
       onSuccess: async () => {
         form.reset();
-        await queryClient.invalidateQueries(trpc.post.pathFilter());
+        await queryClient.invalidateQueries({ queryKey: [["post"]] });
       },
-      onError: (err) => {
+      onError: (err: unknown) => {
+        const error = err as { code?: string };
         toast.error(
-          err.data?.code === "UNAUTHORIZED"
+          error.code === "UNAUTHORIZED"
             ? t("failed_to_create_post")
             : t("you_must_be_logged_in_to_post"),
         );
@@ -98,7 +98,9 @@ function CreatePostForm() {
     validators: {
       onSubmit: CreatePostSchema,
     },
-    onSubmit: (data) => createPost.mutate(data.value),
+    onSubmit: (data) => {
+      createPost.mutate(data.value);
+    },
   });
 
   return (
@@ -167,9 +169,11 @@ function CreatePostForm() {
 }
 
 function PostList() {
-  const trpc = useTRPC();
+  const { orpc } = useRouteContext({ from: "/" });
   const { t } = useTranslation();
-  const { data: posts } = useSuspenseQuery(trpc.post.all.queryOptions());
+  const { data: posts } = useSuspenseQuery(
+    orpc.post.all.queryOptions(),
+  ) as { data: RouterOutputs["post"]["all"] };
 
   if (posts.length === 0) {
     return (
@@ -195,17 +199,18 @@ function PostList() {
 }
 
 function PostCard(props: { post: RouterOutputs["post"]["all"][number] }) {
-  const trpc = useTRPC();
+  const { orpc } = useRouteContext({ from: "/" });
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const deletePost = useMutation(
-    trpc.post.delete.mutationOptions({
+    orpc.post.delete.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.post.pathFilter());
+        await queryClient.invalidateQueries({ queryKey: [["post"]] });
       },
-      onError: (err) => {
+      onError: (err: unknown) => {
+        const error = err as { code?: string };
         toast.error(
-          err.data?.code === "UNAUTHORIZED"
+          error.code === "UNAUTHORIZED"
             ? t("you_must_be_logged_in_to_delete_a_post")
             : t("failed_to_delete_post"),
         );
@@ -223,7 +228,9 @@ function PostCard(props: { post: RouterOutputs["post"]["all"][number] }) {
         <Button
           variant="ghost"
           className="text-primary cursor-pointer text-sm font-bold uppercase hover:bg-transparent hover:text-white"
-          onClick={() => deletePost.mutate(props.post.id)}
+          onClick={() => {
+            deletePost.mutate(props.post.id);
+          }}
         >
           {t("delete_post")}
         </Button>

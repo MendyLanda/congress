@@ -1,10 +1,9 @@
-import type { TRPCRouterRecord } from "@trpc/server";
 import {
   deleteCookie,
   getCookie,
   setCookie,
 } from "@tanstack/react-start/server";
-import { TRPCError } from "@trpc/server";
+import { ORPCError } from "@orpc/server";
 
 import type { BeneficiarySignupInput } from "@congress/validators";
 import {
@@ -55,7 +54,7 @@ import {
 } from "@congress/validators/constants";
 
 import { env } from "../../env";
-import { publicProcedure } from "../trpc";
+import { publicProcedure } from "../orpc";
 
 const BENEFICIARY_AUTH_COOKIE_NAME = "congress_bat";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
@@ -151,9 +150,8 @@ async function upsertPerson(
     })
     .returning();
 
-  if (!created) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
+    if (!created) {
+    throw new ORPCError("INTERNAL_SERVER_ERROR", {
       message: "failed_to_create_person",
     });
   }
@@ -330,7 +328,7 @@ async function storeDocuments(
 export const beneficiaryAuthRouter = {
   checkNationalId: publicProcedure({ captcha: false })
     .input(beneficiaryIdLookupSchema)
-    .mutation(async ({ input }) => {
+    .handler(async ({ input }) => {
       const account = await db.query.BeneficiaryAccount.findFirst({
         where: eq(BeneficiaryAccount.nationalId, input.nationalId),
         with: {
@@ -373,7 +371,7 @@ export const beneficiaryAuthRouter = {
 
   sendOTP: publicProcedure({ captcha: true })
     .input(beneficiaryOtpRequestSchema)
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       const account = await db.query.BeneficiaryAccount.findFirst({
         where: eq(BeneficiaryAccount.nationalId, input.nationalId),
         with: {
@@ -394,8 +392,7 @@ export const beneficiaryAuthRouter = {
       });
 
       if (!account?.person.contacts[0]?.value) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
+        throw new ORPCError("BAD_REQUEST", {
           message: "no_phone_number_found_for_account_error",
         });
       }
@@ -406,7 +403,7 @@ export const beneficiaryAuthRouter = {
 
       await createOTP(account.id, {
         otpCode: code,
-        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
+        ipAddress: context.headers.get("x-forwarded-for") ?? undefined,
       });
 
       return {
@@ -419,14 +416,13 @@ export const beneficiaryAuthRouter = {
 
   verifyOTP: publicProcedure({ captcha: true })
     .input(beneficiaryOtpVerifySchema)
-    .mutation(async ({ input }) => {
+    .handler(async ({ input }) => {
       const account = await db.query.BeneficiaryAccount.findFirst({
         where: eq(BeneficiaryAccount.nationalId, input.nationalId),
       });
 
       if (!account) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
+        throw new ORPCError("NOT_FOUND", {
           message: "Account not found",
         });
       }
@@ -434,8 +430,7 @@ export const beneficiaryAuthRouter = {
       const isValidOTP = await verifyOTP(account.id, input.code, false);
 
       if (!isValidOTP) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
+        throw new ORPCError("BAD_REQUEST", {
           message: "Invalid or expired verification code",
         });
       }
@@ -448,14 +443,13 @@ export const beneficiaryAuthRouter = {
 
   verifyOTPAndSetPassword: publicProcedure({ captcha: true })
     .input(beneficiaryOtpChangePasswordSchema)
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       const account = await db.query.BeneficiaryAccount.findFirst({
         where: eq(BeneficiaryAccount.nationalId, input.nationalId),
       });
 
       if (!account) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
+        throw new ORPCError("NOT_FOUND", {
           message: "Account not found",
         });
       }
@@ -463,8 +457,7 @@ export const beneficiaryAuthRouter = {
       const isValidOTP = await verifyOTP(account.id, input.code, true);
 
       if (!isValidOTP) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
+        throw new ORPCError("BAD_REQUEST", {
           message: "invalid_or_expired_verification_code",
         });
       }
@@ -480,8 +473,8 @@ export const beneficiaryAuthRouter = {
 
       const token = await createSessionToken(account.id, account.status);
       await createSession(account.id, token, {
-        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
-        userAgent: ctx.headers.get("user-agent") ?? undefined,
+        ipAddress: context.headers.get("x-forwarded-for") ?? undefined,
+        userAgent: context.headers.get("user-agent") ?? undefined,
       });
 
       setAuthCookie(token);
@@ -499,15 +492,14 @@ export const beneficiaryAuthRouter = {
 
   sendSignupOTP: publicProcedure({ captcha: true })
     .input(beneficiarySignupOtpRequestSchema)
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       // Check if account already exists
       const existingAccount = await db.query.BeneficiaryAccount.findFirst({
         where: eq(BeneficiaryAccount.nationalId, input.nationalId),
       });
 
       if (existingAccount) {
-        throw new TRPCError({
-          code: "CONFLICT",
+        throw new ORPCError("CONFLICT", {
           message: "an_account_with_this_national_id_already_exists",
         });
       }
@@ -516,7 +508,7 @@ export const beneficiaryAuthRouter = {
         to: input.phoneNumber,
       });
       await createSignupOTP(input.nationalId, input.phoneNumber, {
-        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
+        ipAddress: context.headers.get("x-forwarded-for") ?? undefined,
         otpCode: code,
       });
 
@@ -529,7 +521,7 @@ export const beneficiaryAuthRouter = {
 
   verifySignupOTP: publicProcedure({ captcha: true })
     .input(beneficiarySignupOtpVerifySchema)
-    .mutation(async ({ input }) => {
+    .handler(async ({ input }) => {
       const isValidOTP = await verifySignupOTP(
         input.nationalId,
         input.phoneNumber,
@@ -537,8 +529,7 @@ export const beneficiaryAuthRouter = {
       );
 
       if (!isValidOTP) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
+        throw new ORPCError("BAD_REQUEST", {
           message: "invalid_or_expired_verification_code",
         });
       }
@@ -551,7 +542,7 @@ export const beneficiaryAuthRouter = {
 
   signup: publicProcedure({ captcha: true })
     .input(beneficiarySignupSchema)
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       // Verify OTP before creating account
       const isValidOTP = await verifySignupOTP(
         input.nationalId,
@@ -560,8 +551,7 @@ export const beneficiaryAuthRouter = {
       );
 
       if (!isValidOTP) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
+        throw new ORPCError("BAD_REQUEST", {
           message: "invalid_or_expired_verification_code",
         });
       }
@@ -572,8 +562,7 @@ export const beneficiaryAuthRouter = {
         });
 
         if (existingAccount) {
-          throw new TRPCError({
-            code: "CONFLICT",
+          throw new ORPCError("CONFLICT", {
             message: "an_account_with_this_national_id_already_exists",
           });
         }
@@ -689,16 +678,15 @@ export const beneficiaryAuthRouter = {
       });
 
       if (!account) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: "failed_to_retrieve_account",
         });
       }
 
       const token = await createSessionToken(accountId, account.status);
       await createSession(accountId, token, {
-        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
-        userAgent: ctx.headers.get("user-agent") ?? undefined,
+        ipAddress: context.headers.get("x-forwarded-for") ?? undefined,
+        userAgent: context.headers.get("user-agent") ?? undefined,
       });
 
       setAuthCookie(token);
@@ -716,37 +704,33 @@ export const beneficiaryAuthRouter = {
 
   login: publicProcedure({ captcha: true })
     .input(beneficiaryLoginSchema)
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       const account = await db.query.BeneficiaryAccount.findFirst({
         where: eq(BeneficiaryAccount.nationalId, input.nationalId),
       });
 
       if (!account) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
+        throw new ORPCError("UNAUTHORIZED", {
           message: "invalid_national_id_or_password",
         });
       }
 
       if (await isAccountLocked(account.id)) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
+        throw new ORPCError("FORBIDDEN", {
           message:
             "account_is_temporarily_locked_due_to_too_many_failed_login_attempts",
         });
       }
 
       if (!account.passwordHash) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
+        throw new ORPCError("BAD_REQUEST", {
           message:
             "account_does_not_have_a_password_set_please_use_the_forgot_password_flow_to_set_one",
         });
       }
 
       if (account.status === "rejected") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
+        throw new ORPCError("FORBIDDEN", {
           message: "your_account_has_been_rejected_please_contact_support",
         });
       }
@@ -756,8 +740,7 @@ export const beneficiaryAuthRouter = {
         account.suspendedUntil &&
         account.suspendedUntil > new Date()
       ) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
+        throw new ORPCError("FORBIDDEN", {
           message: "your_account_is_suspended_please_contact_support",
         });
       }
@@ -769,8 +752,7 @@ export const beneficiaryAuthRouter = {
 
       if (!isValidPassword) {
         await incrementFailedLoginAttempts(account.id);
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
+        throw new ORPCError("UNAUTHORIZED", {
           message: "invalid_national_id_or_password",
         });
       }
@@ -779,8 +761,8 @@ export const beneficiaryAuthRouter = {
 
       const token = await createSessionToken(account.id, account.status);
       await createSession(account.id, token, {
-        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
-        userAgent: ctx.headers.get("user-agent") ?? undefined,
+        ipAddress: context.headers.get("x-forwarded-for") ?? undefined,
+        userAgent: context.headers.get("user-agent") ?? undefined,
       });
 
       setAuthCookie(token);
@@ -795,7 +777,7 @@ export const beneficiaryAuthRouter = {
       };
     }),
 
-  getSession: publicProcedure({ captcha: false }).query(async () => {
+  getSession: publicProcedure({ captcha: false }).handler(async () => {
     const token = getCookie(BENEFICIARY_AUTH_COOKIE_NAME);
 
     if (!token) {
@@ -825,7 +807,7 @@ export const beneficiaryAuthRouter = {
     };
   }),
 
-  logout: publicProcedure({ captcha: false }).mutation(async () => {
+  logout: publicProcedure({ captcha: false }).handler(async () => {
     const token = getCookie(BENEFICIARY_AUTH_COOKIE_NAME);
     if (token) {
       await deleteSession(token);
@@ -838,7 +820,7 @@ export const beneficiaryAuthRouter = {
 
   requestPasswordReset: publicProcedure({ captcha: true })
     .input(beneficiaryPasswordResetRequestSchema)
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       const account = await db.query.BeneficiaryAccount.findFirst({
         where: eq(BeneficiaryAccount.nationalId, input.nationalId),
       });
@@ -852,7 +834,7 @@ export const beneficiaryAuthRouter = {
       }
 
       const resetToken = await createPasswordResetToken(account.id, {
-        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
+        ipAddress: context.headers.get("x-forwarded-for") ?? undefined,
       });
 
       console.info(
@@ -869,12 +851,11 @@ export const beneficiaryAuthRouter = {
 
   resetPassword: publicProcedure({ captcha: true })
     .input(beneficiaryResetPasswordSchema)
-    .mutation(async ({ input }) => {
+    .handler(async ({ input }) => {
       const accountId = await verifyPasswordResetToken(input.token);
 
       if (!accountId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
+        throw new ORPCError("BAD_REQUEST", {
           message: "Invalid or expired reset token",
         });
       }
@@ -899,14 +880,13 @@ export const beneficiaryAuthRouter = {
 
   checkAccountStatus: publicProcedure({ captcha: true })
     .input(beneficiaryIdLookupSchema)
-    .query(async ({ input }) => {
+    .handler(async ({ input }) => {
       const account = await db.query.BeneficiaryAccount.findFirst({
         where: eq(BeneficiaryAccount.nationalId, input.nationalId),
       });
 
       if (!account) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
+        throw new ORPCError("NOT_FOUND", {
           message: "Account not found",
         });
       }
@@ -923,4 +903,4 @@ export const beneficiaryAuthRouter = {
                 : "your_account_status_is_unknown",
       };
     }),
-} satisfies TRPCRouterRecord;
+};

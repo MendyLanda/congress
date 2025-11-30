@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  redirect,
+  useNavigate,
+  useRouteContext,
+} from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 
@@ -12,7 +17,7 @@ import { toast } from "@congress/ui/toast";
 import { beneficiarySignupSchema } from "@congress/validators";
 
 import { useBeneficiaryAuth } from "~/lib/beneficiary-auth-provider";
-import { trpcClient, useTRPC } from "~/lib/trpc";
+import { orpcClient } from "~/lib/orpc";
 import { ApplicantDetailsSection } from "./signup/components/applicant-details-section";
 import { ChildrenSection } from "./signup/components/children-section";
 import { FamilyStatusSection } from "./signup/components/family-status-section";
@@ -60,7 +65,7 @@ export const Route = createFileRoute("/signup")({
 function SignupRouteComponent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const trpc = useTRPC();
+  const { orpc } = useRouteContext({ from: "__root__" });
   const { session, refetchSession } = useBeneficiaryAuth();
   const search = Route.useSearch();
 
@@ -78,7 +83,7 @@ function SignupRouteComponent() {
   }, [navigate, session]);
 
   const sendSignupOtpMutation = useMutation(
-    trpc.beneficiaryAuth.sendSignupOTP.mutationOptions({
+    orpc.beneficiaryAuth.sendSignupOTP.mutationOptions({
       onSuccess: (data) => {
         toast.success(data.message);
         setStep("otp");
@@ -90,7 +95,7 @@ function SignupRouteComponent() {
   );
 
   const signupMutation = useMutation(
-    trpc.beneficiaryAuth.signup.mutationOptions({
+    orpc.beneficiaryAuth.signup.mutationOptions({
       onSuccess: async (data) => {
         toast.success(data.message);
         await refetchSession();
@@ -221,7 +226,7 @@ function SignupRouteComponent() {
     UploadedFile | undefined
   >();
 
-  // Upload mutations - use direct trpc calls to avoid SSR issues with mutationOptions
+  // Upload mutations - use direct orpc calls to avoid SSR issues with mutationOptions
   const handleGetPresignedUrl = useCallback(
     async (params: {
       documentTypeId: string;
@@ -231,8 +236,8 @@ function SignupRouteComponent() {
       contentType: string;
     }) => {
       try {
-        // Use the trpc client directly for SSR compatibility
-        const result = await trpcClient.upload.requestUploadUrl.mutate(params);
+        // Use the orpc client directly for SSR compatibility
+        const result = await orpcClient.upload.requestUploadUrl(params);
         return result;
       } catch (error) {
         const errorMessage =
@@ -247,7 +252,7 @@ function SignupRouteComponent() {
   const handleCancelUpload = useCallback(
     async (uploadId: string) => {
       try {
-        await trpcClient.upload.cancelUpload.mutate({ uploadId });
+        await orpcClient.upload.cancelUpload({ uploadId });
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);

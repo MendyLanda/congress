@@ -1,1 +1,1 @@
-export * from "@congress/ui/trpc";
+export * from "@congress/ui/orpc";

@@ -3,7 +3,7 @@ export const getCorsHeaders = (origin: string) => {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "GET, POST",
     "Access-Control-Allow-Headers":
-      "Content-Type, Authorization, trpc-accept, x-trpc-source",
+      "Content-Type, Authorization, x-orpc-source",
     "Access-Control-Allow-Credentials": "true",
   });
 };

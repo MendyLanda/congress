@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { useStore } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  useNavigate,
+  useRouteContext,
+} from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 
@@ -18,7 +22,7 @@ import {
 } from "@congress/validators";
 
 import { useBeneficiaryAuth } from "~/lib/beneficiary-auth-provider";
-import { trpcClient, useTRPC } from "~/lib/trpc";
+import { orpcClient } from "~/lib/orpc";
 
 type LoginStep = "identify" | "password" | "otp" | "setPassword";
 
@@ -67,10 +71,9 @@ function IdentifyStep({
       onSubmit: beneficiaryIdLookupSchema,
       onSubmitAsync: async ({ value }) => {
         try {
-          const result =
-            await trpcClient.beneficiaryAuth.checkNationalId.mutate({
-              nationalId: value.nationalId,
-            });
+          const result = await orpcClient.beneficiaryAuth.checkNationalId({
+            nationalId: value.nationalId,
+          });
 
           if (!result.exists) {
             toast.success(t("no_account_found_redirecting"));
@@ -463,7 +466,7 @@ function LoginRouteComponent() {
   const { t } = useTranslation("login");
   const navigate = useNavigate();
   const initialSearch = Route.useSearch();
-  const trpc = useTRPC();
+  const { orpc } = useRouteContext({ from: "__root__" });
   const {
     session,
     isLoading: isAuthLoading,
@@ -480,7 +483,7 @@ function LoginRouteComponent() {
   const [otpCode, setOtpCode] = useState<string>("");
 
   const sendOtpMutation = useMutation(
-    trpc.beneficiaryAuth.sendOTP.mutationOptions({
+    orpc.beneficiaryAuth.sendOTP.mutationOptions({
       onSuccess: (data) => {
         setMaskedPhoneNumber(data.phoneNumberMasked);
         toast.success(data.message);
@@ -496,7 +499,7 @@ function LoginRouteComponent() {
   );
 
   const loginMutation = useMutation(
-    trpc.beneficiaryAuth.login.mutationOptions({
+    orpc.beneficiaryAuth.login.mutationOptions({
       onSuccess: async () => {
         toast.success(t("logged_in_successfully"));
         await refetchSession();
@@ -509,7 +512,7 @@ function LoginRouteComponent() {
   );
 
   const verifyOtpMutation = useMutation(
-    trpc.beneficiaryAuth.verifyOTP.mutationOptions({
+    orpc.beneficiaryAuth.verifyOTP.mutationOptions({
       onSuccess: () => {
         toast.success(t("otp_verified_successfully"));
         setStep("setPassword");
@@ -521,7 +524,7 @@ function LoginRouteComponent() {
   );
 
   const setPasswordMutation = useMutation(
-    trpc.beneficiaryAuth.verifyOTPAndSetPassword.mutationOptions({
+    orpc.beneficiaryAuth.verifyOTPAndSetPassword.mutationOptions({
       onSuccess: async (data) => {
         toast.success(data.message);
         await refetchSession();
