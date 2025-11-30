@@ -12,3 +12,4 @@ export { NumberField } from "./number-field";
 export { SelectField } from "./select-field";
 export { AddressFieldsGroup } from "./address-fields-group";
 export { ChildrenFieldsGroup } from "./children-fields-group";
+export { FloatingField } from "./floating-field";

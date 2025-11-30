@@ -20,28 +20,27 @@ export function PhoneField({ label, optional = false, t }: PhoneFieldProps) {
 
   return (
     <Field data-invalid={isInvalid}>
-			<FloatingField
-				label={
-					optional
-						? `${label} ${field.state.meta.isTouched ? "" : `(${t("optional")})`}`
-						: label
-				}
-				htmlFor={field.name}
-				filled={Boolean(field.state.value)}
-			>
-				<PhoneInput
-					id={field.name}
-					value={field.state.value ?? ""}
-					onChange={(value: string | undefined) =>
-						field.handleChange(value ?? "")
-					}
-					onBlur={field.handleBlur}
-					disabled={isSubmitting}
-					defaultCountry="IL"
-					fixedCountry="IL"
-					placeholder={" "}
-				/>
-			</FloatingField>
+      <FloatingField
+        label={
+          optional
+            ? `${label} ${field.state.meta.isTouched ? "" : `(${t("optional")})`}`
+            : label
+        }
+        filled={Boolean(field.state.value)}
+      >
+        <PhoneInput
+          id={field.name}
+          value={field.state.value ?? ""}
+          onChange={(value: string | undefined) =>
+            field.handleChange(value ?? "")
+          }
+          onBlur={field.handleBlur}
+          disabled={isSubmitting}
+          defaultCountry="IL"
+          fixedCountry="IL"
+          placeholder={" "}
+        />
+      </FloatingField>
       {isInvalid && <FieldError errors={field.state.meta.errors} />}
     </Field>
   );

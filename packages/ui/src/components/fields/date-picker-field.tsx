@@ -17,11 +17,7 @@ export function DatePickerField({ label }: DatePickerFieldProps) {
 
   return (
     <Field data-invalid={isInvalid}>
-      <FloatingField
-        label={label}
-        filled={!!field.state.value}
-        htmlFor={field.name}
-      >
+      <FloatingField label={label} filled={!!field.state.value}>
         <DatePicker
           id={field.name}
           value={field.state.value ?? undefined}

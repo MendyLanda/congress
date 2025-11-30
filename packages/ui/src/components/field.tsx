@@ -199,14 +199,27 @@ export function FieldSeparator({
   );
 }
 
+const fieldErrorVariants = cva("text-sm font-normal", {
+  variants: {
+    variant: {
+      default: "text-destructive",
+      inverted: "text-[#efa5a5]",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
+
 export function FieldError({
   className,
   children,
   errors: maybeErrors,
+  variant,
   ...props
 }: React.ComponentProps<"div"> & {
   errors?: ({ message?: string } | undefined)[];
-}) {
+} & VariantProps<typeof fieldErrorVariants>) {
   const content = useMemo(() => {
     if (children) {
       return children;
@@ -240,7 +253,7 @@ export function FieldError({
     <div
       role="alert"
       data-slot="field-error"
-      className={cn("text-destructive text-sm font-normal", className)}
+      className={cn(fieldErrorVariants({ variant }), className)}
       {...props}
     >
       {content}

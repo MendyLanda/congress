@@ -1,21 +1,15 @@
 import { useEffect, useState } from "react";
-import { useForm, useStore } from "@tanstack/react-form";
+import { useStore } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 
 import { Button } from "@congress/ui/button";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@congress/ui/field";
-import { Input } from "@congress/ui/input";
-import { Label } from "@congress/ui/label";
+import { FieldError, FieldGroup } from "@congress/ui/field";
+import { useAppForm } from "@congress/ui/fields";
 import { LanguageSwitcher } from "@congress/ui/language-switcher";
+import { SquareLogo } from "@congress/ui/square-logo";
 import { toast } from "@congress/ui/toast";
 import {
   beneficiaryIdLookupSchema,
@@ -44,6 +38,415 @@ const setPasswordSchema = z
     message: "passwords_do_not_match",
     path: ["confirmPassword"],
   });
+
+interface IdentifyStepProps {
+  initialNationalId?: string;
+  onSuccess: (data: {
+    nationalId: string;
+    nextStep: "password" | "setPassword" | "signup";
+    phoneNumberMasked?: string | null;
+  }) => void | Promise<void>;
+  onPasswordStepReady: () => void;
+  isBusy: boolean;
+}
+
+function IdentifyStep({
+  initialNationalId = "",
+  onSuccess,
+  onPasswordStepReady,
+  isBusy,
+}: IdentifyStepProps) {
+  const { t } = useTranslation("login");
+  const navigate = useNavigate();
+
+  const form = useAppForm({
+    defaultValues: {
+      nationalId: initialNationalId,
+    },
+    validators: {
+      onSubmit: beneficiaryIdLookupSchema,
+      onSubmitAsync: async ({ value }) => {
+        try {
+          const result =
+            await trpcClient.beneficiaryAuth.checkNationalId.mutate({
+              nationalId: value.nationalId,
+            });
+
+          if (!result.exists) {
+            toast.success(t("no_account_found_redirecting"));
+            await navigate({
+              to: "/signup",
+              search: { nationalId: value.nationalId },
+              replace: false,
+            });
+            return;
+          }
+
+          if (result.nextStep === "password") {
+            onPasswordStepReady();
+          }
+
+          await onSuccess({
+            nationalId: value.nationalId,
+            nextStep: result.nextStep,
+            phoneNumberMasked: result.phoneNumberMasked ?? null,
+          });
+        } catch (error) {
+          return {
+            fields: {
+              nationalId:
+                error instanceof Error
+                  ? error.message || t("national_id_incorrect")
+                  : t("national_id_incorrect"),
+            },
+          };
+        }
+      },
+    },
+    onSubmit: async () => {
+      // onSubmit is handled by onSubmitAsync validator
+    },
+  });
+
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
+  const isInvalid = useStore(form.store, (state) => !state.isValid);
+
+  return (
+    <form
+      className="flex w-full max-w-sm flex-col gap-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void form.handleSubmit();
+      }}
+    >
+      <form.AppField
+        name="nationalId"
+        children={(field) => {
+          const isInvalid =
+            field.state.meta.isTouched && !field.state.meta.isValid;
+          return (
+            <field.TextField
+              label={t("enter_id_label")}
+              autoComplete="off"
+              inputMode="numeric"
+              aria-invalid={isInvalid}
+              disabled={isSubmitting || isBusy}
+              variant="inverted"
+              align="center"
+              displayError={false}
+            />
+          );
+        }}
+      />
+      <Button
+        type="submit"
+        className="text-foreground bg-accent hover:bg-background focus-visible:ring-accent/50 focus-visible:border-accent w-full cursor-pointer focus-visible:border focus-visible:ring-[3px]"
+        size="lg"
+        disabled={isSubmitting || isBusy}
+      >
+        {isSubmitting ? t("checking") : t("login_button")}
+      </Button>
+
+      {isInvalid && (
+        <FieldError
+          className="text-center"
+          errors={form.state.fieldMeta.nationalId.errors.map((error) => {
+            console.log(error);
+            if (typeof error === "string") {
+              try {
+                return { message: t(error as never) };
+              } catch {
+                return { message: error };
+              }
+            }
+            if (
+              typeof error === "object" &&
+              error &&
+              "message" in error &&
+              error.message &&
+              typeof error.message === "string"
+            ) {
+              try {
+                return { message: t(error.message) };
+              } catch {
+                return { message: error.message };
+              }
+            }
+            return undefined;
+          })}
+          variant="inverted"
+        />
+      )}
+    </form>
+  );
+}
+
+interface PasswordStepProps {
+  nationalId: string;
+  onLogin: (password: string) => void | Promise<void>;
+  onForgotPassword: () => void | Promise<void>;
+  onBack: () => void;
+  isBusy: boolean;
+}
+
+function PasswordStep({
+  nationalId,
+  onLogin,
+  onForgotPassword,
+  onBack,
+  isBusy,
+}: PasswordStepProps) {
+  const { t } = useTranslation("login");
+
+  const form = useAppForm({
+    defaultValues: {
+      password: "",
+    },
+    validators: {
+      onSubmit: beneficiaryLoginSchema.pick({ password: true }),
+    },
+    onSubmit: async ({ value }) => {
+      await onLogin(value.password);
+    },
+  });
+
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
+
+  return (
+    <form
+      className="space-y-6"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void form.handleSubmit();
+      }}
+    >
+      <div className="text-muted-foreground space-y-2 text-sm">
+        <p>{t("login_national_id_label", { id: nationalId })}</p>
+      </div>
+      <FieldGroup>
+        <form.AppField name="password">
+          {(field) => (
+            <field.TextField
+              label={t("password")}
+              type="password"
+              disabled={isSubmitting || isBusy}
+            />
+          )}
+        </form.AppField>
+      </FieldGroup>
+      <div className="space-y-3">
+        <Button
+          type="submit"
+          className="w-full"
+          size="lg"
+          disabled={isSubmitting || isBusy}
+        >
+          {isSubmitting || isBusy ? t("logging_in") : t("login")}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full text-sm"
+          disabled={isBusy}
+          onClick={() => {
+            void onForgotPassword();
+          }}
+        >
+          {t("forgot_password")}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full text-sm"
+          onClick={onBack}
+        >
+          {t("back")}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+interface OtpStepProps {
+  maskedPhoneNumber: string | null;
+  onVerify: (otp: string) => void | Promise<void>;
+  onResend: () => void | Promise<void>;
+  onBack: () => void;
+  isBusy: boolean;
+  isResending: boolean;
+}
+
+function OtpStep({
+  maskedPhoneNumber,
+  onVerify,
+  onResend,
+  onBack,
+  isBusy,
+  isResending,
+}: OtpStepProps) {
+  const { t } = useTranslation("login");
+
+  const form = useAppForm({
+    defaultValues: {
+      otp: "",
+    },
+    validators: {
+      onSubmit: otpSchema,
+    },
+    onSubmit: async ({ value }) => {
+      await onVerify(value.otp);
+    },
+  });
+
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
+
+  return (
+    <form
+      className="space-y-6"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void form.handleSubmit();
+      }}
+    >
+      <div className="text-muted-foreground space-y-2 text-sm">
+        <p>
+          {maskedPhoneNumber
+            ? t("otp_sent_message", {
+                phoneNumber: maskedPhoneNumber,
+              })
+            : t("otp_sent_message_no_phone")}
+        </p>
+      </div>
+      <FieldGroup>
+        <form.AppField
+          name="otp"
+          listeners={{
+            onChange: ({ value, fieldApi }) => {
+              // Only allow digits
+              const digitsOnly = value.replace(/\D/g, "");
+              if (digitsOnly !== value) {
+                fieldApi.setValue(digitsOnly);
+              }
+            },
+          }}
+        >
+          {(field) => (
+            <field.TextField
+              label={t("verification_code_label")}
+              inputMode="numeric"
+              maxLength={6}
+              disabled={isSubmitting || isBusy}
+              className="text-center text-2xl tracking-[0.4em]"
+            />
+          )}
+        </form.AppField>
+      </FieldGroup>
+      <div className="space-y-3">
+        <Button
+          type="submit"
+          className="w-full"
+          size="lg"
+          disabled={isSubmitting || isBusy}
+        >
+          {isSubmitting || isBusy ? t("verifying") : t("verify_code")}
+        </Button>
+        <div className="flex items-center justify-between text-sm">
+          <Button
+            type="button"
+            variant="link"
+            disabled={isResending || isBusy}
+            onClick={() => {
+              void onResend();
+            }}
+          >
+            {t("resend_code")}
+          </Button>
+          <Button type="button" variant="link" onClick={onBack}>
+            {t("back")}
+          </Button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+interface SetPasswordStepProps {
+  onSetPassword: (newPassword: string) => void | Promise<void>;
+  onBack: () => void;
+  isBusy: boolean;
+}
+
+function SetPasswordStep({
+  onSetPassword,
+  onBack,
+  isBusy,
+}: SetPasswordStepProps) {
+  const { t } = useTranslation("login");
+
+  const form = useAppForm({
+    defaultValues: {
+      newPassword: "",
+      confirmPassword: "",
+    },
+    validators: {
+      onSubmit: setPasswordSchema,
+    },
+    onSubmit: async ({ value }) => {
+      await onSetPassword(value.newPassword);
+    },
+  });
+
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
+
+  return (
+    <form
+      className="space-y-6"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void form.handleSubmit();
+      }}
+    >
+      <FieldGroup>
+        <form.AppField name="newPassword">
+          {(field) => (
+            <field.TextField
+              label={t("new_password")}
+              type="password"
+              disabled={isSubmitting || isBusy}
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="confirmPassword">
+          {(field) => (
+            <field.TextField
+              label={t("confirm_password")}
+              type="password"
+              disabled={isSubmitting || isBusy}
+            />
+          )}
+        </form.AppField>
+      </FieldGroup>
+      <div className="space-y-3">
+        <Button
+          type="submit"
+          className="w-full"
+          size="lg"
+          disabled={isSubmitting || isBusy}
+        >
+          {isSubmitting || isBusy ? t("setting_password") : t("set_password")}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full text-sm"
+          onClick={onBack}
+        >
+          {t("back")}
+        </Button>
+      </div>
+    </form>
+  );
+}
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>) => {
@@ -135,162 +538,6 @@ function LoginRouteComponent() {
     }
   }, [navigate, session]);
 
-  const idForm = useForm({
-    defaultValues: {
-      nationalId: initialSearch.nationalId ?? "",
-    },
-    validators: {
-      onSubmit: beneficiaryIdLookupSchema,
-      onSubmitAsync: async ({ value }) => {
-        try {
-          // Use trpcClient directly for SSR compatibility
-          const result =
-            await trpcClient.beneficiaryAuth.checkNationalId.mutate({
-              nationalId: value.nationalId,
-            });
-
-          setSelectedNationalId(value.nationalId);
-
-          if (!result.exists) {
-            toast.success(t("no_account_found_redirecting"));
-            await navigate({
-              to: "/signup",
-              search: { nationalId: value.nationalId },
-              replace: false,
-            });
-            return;
-          }
-
-          setMaskedPhoneNumber(result.phoneNumberMasked ?? null);
-
-          if (result.nextStep === "password") {
-            passwordForm.reset();
-            setStep("password");
-            return;
-          }
-
-          if (result.nextStep === "setPassword") {
-            await sendOtpMutation.mutateAsync({ nationalId: value.nationalId });
-            return;
-          }
-
-          // If nextStep is "signup", navigate to signup
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-          if (result.nextStep === "signup") {
-            toast.success(t("no_account_found_redirecting"));
-            await navigate({
-              to: "/signup",
-              search: { nationalId: value.nationalId },
-              replace: false,
-            });
-          }
-        } catch (error) {
-          // Return field error to be handled by form
-          return {
-            fields: {
-              nationalId:
-                error instanceof Error
-                  ? error.message || t("national_id_incorrect")
-                  : t("national_id_incorrect"),
-            },
-          };
-        }
-      },
-    },
-    onSubmit: async () => {
-      // onSubmit is handled by onSubmitAsync validator
-    },
-  });
-
-  const passwordForm = useForm({
-    defaultValues: {
-      password: "",
-    },
-    validators: {
-      onSubmit: beneficiaryLoginSchema.pick({ password: true }),
-    },
-    onSubmit: async ({ value }) => {
-      if (!selectedNationalId) {
-        toast.error(t("national_id_missing"));
-        setStep("identify");
-        return;
-      }
-
-      await loginMutation.mutateAsync({
-        nationalId: selectedNationalId,
-        password: value.password,
-      });
-    },
-  });
-
-  const otpForm = useForm({
-    defaultValues: {
-      otp: "",
-    },
-    validators: {
-      onSubmit: otpSchema,
-    },
-    onSubmit: async ({ value }) => {
-      if (!selectedNationalId) {
-        toast.error(t("national_id_missing"));
-        setStep("identify");
-        return;
-      }
-
-      await verifyOtpMutation.mutateAsync({
-        nationalId: selectedNationalId,
-        code: value.otp,
-      });
-      setOtpCode(value.otp);
-    },
-  });
-
-  const setPasswordForm = useForm({
-    defaultValues: {
-      newPassword: "",
-      confirmPassword: "",
-    },
-    validators: {
-      onSubmit: setPasswordSchema,
-    },
-    onSubmit: async ({ value }) => {
-      if (!selectedNationalId) {
-        toast.error(t("national_id_missing"));
-        setStep("identify");
-        return;
-      }
-
-      if (!otpCode) {
-        toast.error(t("otp_required"));
-        setStep("otp");
-        return;
-      }
-
-      await setPasswordMutation.mutateAsync({
-        nationalId: selectedNationalId,
-        code: otpCode,
-        newPassword: value.newPassword,
-      });
-    },
-  });
-
-  const idFormSubmitting = useStore(
-    idForm.store,
-    (state) => state.isSubmitting,
-  );
-  const passwordFormSubmitting = useStore(
-    passwordForm.store,
-    (state) => state.isSubmitting,
-  );
-  const otpFormSubmitting = useStore(
-    otpForm.store,
-    (state) => state.isSubmitting,
-  );
-  const setPasswordFormSubmitting = useStore(
-    setPasswordForm.store,
-    (state) => state.isSubmitting,
-  );
-
   const isBusy =
     sendOtpMutation.isPending ||
     loginMutation.isPending ||
@@ -305,19 +552,132 @@ function LoginRouteComponent() {
     );
   }
 
+  const handleIdentifySuccess = async (data: {
+    nationalId: string;
+    nextStep: "password" | "setPassword" | "signup";
+    phoneNumberMasked?: string | null;
+  }) => {
+    setSelectedNationalId(data.nationalId);
+    setMaskedPhoneNumber(data.phoneNumberMasked ?? null);
+
+    if (data.nextStep === "password") {
+      setStep("password");
+      return;
+    }
+
+    if (data.nextStep === "setPassword") {
+      await sendOtpMutation.mutateAsync({ nationalId: data.nationalId });
+      return;
+    }
+
+    // If nextStep is "signup", navigate to signup
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (data.nextStep === "signup") {
+      toast.success(t("no_account_found_redirecting"));
+      await navigate({
+        to: "/signup",
+        search: { nationalId: data.nationalId },
+        replace: false,
+      });
+    }
+  };
+
+  const handlePasswordStepReady = () => {
+    // This is called when password step should be ready
+    // Currently no action needed, but kept for consistency
+  };
+
+  const handleLogin = async (password: string) => {
+    if (!selectedNationalId) {
+      toast.error(t("national_id_missing"));
+      setStep("identify");
+      return;
+    }
+
+    await loginMutation.mutateAsync({
+      nationalId: selectedNationalId,
+      password,
+    });
+  };
+
+  const handleForgotPassword = async () => {
+    if (!selectedNationalId) {
+      toast.error(t("national_id_missing"));
+      setStep("identify");
+      return;
+    }
+    await sendOtpMutation.mutateAsync({
+      nationalId: selectedNationalId,
+    });
+  };
+
+  const handlePasswordBack = () => {
+    setStep("identify");
+    setSelectedNationalId(null);
+  };
+
+  const handleVerifyOtp = async (otp: string) => {
+    if (!selectedNationalId) {
+      toast.error(t("national_id_missing"));
+      setStep("identify");
+      return;
+    }
+
+    await verifyOtpMutation.mutateAsync({
+      nationalId: selectedNationalId,
+      code: otp,
+    });
+    setOtpCode(otp);
+  };
+
+  const handleResendOtp = async () => {
+    if (!selectedNationalId) {
+      toast.error(t("national_id_missing"));
+      setStep("identify");
+      return;
+    }
+    await sendOtpMutation.mutateAsync({
+      nationalId: selectedNationalId,
+    });
+  };
+
+  const handleOtpBack = () => {
+    setStep("password");
+  };
+
+  const handleSetPassword = async (newPassword: string) => {
+    if (!selectedNationalId) {
+      toast.error(t("national_id_missing"));
+      setStep("identify");
+      return;
+    }
+
+    if (!otpCode) {
+      toast.error(t("otp_required"));
+      setStep("otp");
+      return;
+    }
+
+    await setPasswordMutation.mutateAsync({
+      nationalId: selectedNationalId,
+      code: otpCode,
+      newPassword,
+    });
+  };
+
+  const handleSetPasswordBack = () => {
+    setStep("otp");
+  };
+
   return (
     <main className="bg-foreground flex min-h-screen justify-between gap-12 overflow-x-hidden px-8 py-4">
-      <section className="relative flex w-full flex-col items-center justify-center gap-8">
+      <section className="relative flex w-full flex-col items-center justify-center gap-10">
         {/* Language Switcher */}
         <div className="absolute start-0 top-0">
           <LanguageSwitcher />
         </div>
         {/* Logo */}
-        <img
-          src="/square-logo.svg"
-          alt={t("beneficiary_logo_alt")}
-          className="size-48"
-        />
+        <SquareLogo className="size-40 text-white" />
 
         {/* Greeting */}
         <h2 className="text-background text-4xl font-normal">
@@ -325,352 +685,42 @@ function LoginRouteComponent() {
         </h2>
         {/* Login Form */}
         {step === "identify" && (
-          <form
-            className="flex w-full max-w-sm flex-col gap-4"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void idForm.handleSubmit();
-            }}
-          >
-            <idForm.Field
-              name="nationalId"
-              children={(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
-                return (
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-background" htmlFor={field.name}>
-                      {t("enter_id_label")}
-                    </Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(event) =>
-                        field.handleChange(event.target.value)
-                      }
-                      autoComplete="off"
-                      placeholder={t("enter_id_placeholder")}
-                      inputMode="numeric"
-                      aria-invalid={isInvalid}
-                      disabled={idFormSubmitting || isBusy}
-                      className="border-background focus-visible:border-accent focus-visible:ring-accent/50 text-background text-center aria-invalid:border-[#efa5a5] aria-invalid:text-[#efa5a5]"
-                    />
-                    {isInvalid && (
-                      <FieldError
-                        errors={field.state.meta.errors.map((error) =>
-                          typeof error === "string"
-                            ? { message: t(error) }
-                            : error?.message
-                              ? { message: t(error.message) }
-                              : undefined,
-                        )}
-                        className="text-center text-[#efa5a5]"
-                      />
-                    )}
-                  </div>
-                );
-              }}
-            />
-            <Button
-              type="submit"
-              className="text-foreground bg-background hover:bg-accent focus-visible:ring-accent/50 focus-visible:border-accent w-full cursor-pointer focus-visible:border focus-visible:ring-[3px]"
-              size="lg"
-              disabled={idFormSubmitting || isBusy}
-            >
-              {idFormSubmitting ? t("checking") : t("login_button")}
-            </Button>
-          </form>
+          <IdentifyStep
+            initialNationalId={initialSearch.nationalId}
+            onSuccess={handleIdentifySuccess}
+            onPasswordStepReady={handlePasswordStepReady}
+            isBusy={isBusy}
+          />
         )}
+
         {/* Other steps - shown in a card */}
         {(step === "password" || step === "otp" || step === "setPassword") && (
           <div className="bg-card w-full max-w-md space-y-6 rounded-3xl p-10 shadow-xl">
-            {step === "password" && (
-              <form
-                className="space-y-6"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void passwordForm.handleSubmit();
-                }}
-              >
-                <div className="text-muted-foreground space-y-2 text-sm">
-                  <p>
-                    {t("login_national_id_label", { id: selectedNationalId })}
-                  </p>
-                </div>
-                <FieldGroup>
-                  <passwordForm.Field
-                    name="password"
-                    children={(field) => {
-                      const isInvalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid;
-                      return (
-                        <Field data-invalid={isInvalid}>
-                          <FieldContent>
-                            <FieldLabel htmlFor={field.name}>
-                              {t("password")}
-                            </FieldLabel>
-                          </FieldContent>
-                          <Input
-                            id={field.name}
-                            type="password"
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(event) =>
-                              field.handleChange(event.target.value)
-                            }
-                            placeholder={t("enter_your_password")}
-                            disabled={passwordFormSubmitting || isBusy}
-                          />
-                          {isInvalid && (
-                            <FieldError errors={field.state.meta.errors} />
-                          )}
-                        </Field>
-                      );
-                    }}
-                  />
-                </FieldGroup>
-                <div className="space-y-3">
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    size="lg"
-                    disabled={passwordFormSubmitting || isBusy}
-                  >
-                    {passwordFormSubmitting || isBusy
-                      ? t("logging_in")
-                      : t("login")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full text-sm"
-                    disabled={sendOtpMutation.isPending || isBusy}
-                    onClick={() => {
-                      if (!selectedNationalId) {
-                        toast.error(t("national_id_missing"));
-                        setStep("identify");
-                        return;
-                      }
-                      void sendOtpMutation.mutateAsync({
-                        nationalId: selectedNationalId,
-                      });
-                    }}
-                  >
-                    {t("forgot_password")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full text-sm"
-                    onClick={() => {
-                      setStep("identify");
-                      idForm.reset();
-                      passwordForm.reset();
-                      setSelectedNationalId(null);
-                    }}
-                  >
-                    {t("back")}
-                  </Button>
-                </div>
-              </form>
+            {step === "password" && selectedNationalId && (
+              <PasswordStep
+                nationalId={selectedNationalId}
+                onLogin={handleLogin}
+                onForgotPassword={handleForgotPassword}
+                onBack={handlePasswordBack}
+                isBusy={isBusy}
+              />
             )}
-            {step === "otp" && (
-              <form
-                className="space-y-6"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void otpForm.handleSubmit();
-                }}
-              >
-                <div className="text-muted-foreground space-y-2 text-sm">
-                  <p>
-                    {maskedPhoneNumber
-                      ? t("otp_sent_message", {
-                          phoneNumber: maskedPhoneNumber,
-                        })
-                      : t("otp_sent_message_no_phone")}
-                  </p>
-                </div>
-                <FieldGroup>
-                  <otpForm.Field
-                    name="otp"
-                    children={(field) => {
-                      const isInvalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid;
-                      return (
-                        <Field data-invalid={isInvalid}>
-                          <FieldContent>
-                            <FieldLabel htmlFor={field.name}>
-                              {t("verification_code_label")}
-                            </FieldLabel>
-                          </FieldContent>
-                          <Input
-                            id={field.name}
-                            type="text"
-                            inputMode="numeric"
-                            maxLength={6}
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(event) =>
-                              field.handleChange(
-                                event.target.value.replace(/\D/g, ""),
-                              )
-                            }
-                            placeholder="000000"
-                            className="text-center text-2xl tracking-[0.4em]"
-                            disabled={
-                              otpFormSubmitting ||
-                              isBusy ||
-                              verifyOtpMutation.isPending
-                            }
-                          />
-                          {isInvalid && (
-                            <FieldError errors={field.state.meta.errors} />
-                          )}
-                        </Field>
-                      );
-                    }}
-                  />
-                </FieldGroup>
-                <div className="space-y-3">
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    size="lg"
-                    disabled={otpFormSubmitting || isBusy}
-                  >
-                    {otpFormSubmitting || isBusy
-                      ? t("verifying")
-                      : t("verify_code")}
-                  </Button>
-                  <div className="flex items-center justify-between text-sm">
-                    <Button
-                      type="button"
-                      variant="link"
-                      disabled={sendOtpMutation.isPending || isBusy}
-                      onClick={() => {
-                        if (!selectedNationalId) {
-                          toast.error(t("national_id_missing"));
-                          setStep("identify");
-                          return;
-                        }
-                        void sendOtpMutation.mutateAsync({
-                          nationalId: selectedNationalId,
-                        });
-                      }}
-                    >
-                      {t("resend_code")}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="link"
-                      onClick={() => {
-                        setStep("password");
-                        otpForm.reset();
-                      }}
-                    >
-                      {t("back")}
-                    </Button>
-                  </div>
-                </div>
-              </form>
+            {step === "otp" && selectedNationalId && (
+              <OtpStep
+                maskedPhoneNumber={maskedPhoneNumber}
+                onVerify={handleVerifyOtp}
+                onResend={handleResendOtp}
+                onBack={handleOtpBack}
+                isBusy={isBusy}
+                isResending={sendOtpMutation.isPending}
+              />
             )}
-            {step === "setPassword" && (
-              <form
-                className="space-y-6"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void setPasswordForm.handleSubmit();
-                }}
-              >
-                <FieldGroup>
-                  <setPasswordForm.Field
-                    name="newPassword"
-                    children={(field) => {
-                      const isInvalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid;
-                      return (
-                        <Field data-invalid={isInvalid}>
-                          <FieldContent>
-                            <FieldLabel htmlFor={field.name}>
-                              {t("new_password")}
-                            </FieldLabel>
-                          </FieldContent>
-                          <Input
-                            id={field.name}
-                            type="password"
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(event) =>
-                              field.handleChange(event.target.value)
-                            }
-                            placeholder={t("enter_new_password")}
-                            disabled={setPasswordFormSubmitting || isBusy}
-                          />
-                          {isInvalid && (
-                            <FieldError errors={field.state.meta.errors} />
-                          )}
-                        </Field>
-                      );
-                    }}
-                  />
-                  <setPasswordForm.Field
-                    name="confirmPassword"
-                    children={(field) => {
-                      const isInvalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid;
-                      return (
-                        <Field data-invalid={isInvalid}>
-                          <FieldContent>
-                            <FieldLabel htmlFor={field.name}>
-                              {t("confirm_password")}
-                            </FieldLabel>
-                          </FieldContent>
-                          <Input
-                            id={field.name}
-                            type="password"
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(event) =>
-                              field.handleChange(event.target.value)
-                            }
-                            placeholder={t("confirm_new_password")}
-                            disabled={setPasswordFormSubmitting || isBusy}
-                          />
-                          {isInvalid && (
-                            <FieldError errors={field.state.meta.errors} />
-                          )}
-                        </Field>
-                      );
-                    }}
-                  />
-                </FieldGroup>
-                <div className="space-y-3">
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    size="lg"
-                    disabled={setPasswordFormSubmitting || isBusy}
-                  >
-                    {setPasswordFormSubmitting || isBusy
-                      ? t("setting_password")
-                      : t("set_password")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full text-sm"
-                    onClick={() => {
-                      setStep("otp");
-                      setPasswordForm.reset();
-                    }}
-                  >
-                    {t("back")}
-                  </Button>
-                </div>
-              </form>
+            {step === "setPassword" && selectedNationalId && (
+              <SetPasswordStep
+                onSetPassword={handleSetPassword}
+                onBack={handleSetPasswordBack}
+                isBusy={isBusy}
+              />
             )}
           </div>
         )}

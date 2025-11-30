@@ -7,6 +7,7 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
+  "tailwindCSS.classFunctions": ["cva", "cn"],
   "tailwindCSS.classAttributes": [
     "class",
     "className",

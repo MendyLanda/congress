@@ -36,7 +36,7 @@ import {
   PersonRelationship,
   Upload,
 } from "@congress/db/schema";
-import { sendVoiceOTP } from "@congress/transactional/twilio";
+import { sendVoicePhoneVerification } from "@congress/transactional/yemot";
 import {
   beneficiaryIdLookupSchema,
   beneficiaryLoginSchema,
@@ -400,19 +400,18 @@ export const beneficiaryAuthRouter = {
         });
       }
 
-      const code = await createOTP(account.id, {
-        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
+      const code = await sendVoicePhoneVerification({
+        to: account.person.contacts[0].value,
       });
 
-      await sendVoiceOTP({
-        to: account.person.contacts[0].value,
-        code,
+      await createOTP(account.id, {
+        otpCode: code,
+        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
       });
 
       return {
         success: true,
-        message:
-          "A verification code has been sent to your phone via voice call.",
+        message: "verification_code_sent_successfully",
         phoneNumberMasked: maskPhoneNumber(account.person.contacts[0].value),
         devCode: env.NODE_ENV === "development" ? code : undefined,
       };
@@ -443,7 +442,7 @@ export const beneficiaryAuthRouter = {
 
       return {
         success: true,
-        message: "OTP verified successfully. You can now set your password.",
+        message: "otp_verified_successfully",
       };
     }),
 
@@ -466,7 +465,7 @@ export const beneficiaryAuthRouter = {
       if (!isValidOTP) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Invalid or expired verification code",
+          message: "invalid_or_expired_verification_code",
         });
       }
 
@@ -489,7 +488,7 @@ export const beneficiaryAuthRouter = {
 
       return {
         success: true,
-        message: "Password set successfully. You are now logged in.",
+        message: "password_set_successfully_you_are_now_logged_in",
         account: {
           id: account.id,
           nationalId: account.nationalId,
@@ -509,23 +508,21 @@ export const beneficiaryAuthRouter = {
       if (existingAccount) {
         throw new TRPCError({
           code: "CONFLICT",
-          message: "An account with this national ID already exists",
+          message: "an_account_with_this_national_id_already_exists",
         });
       }
 
-      const code = await createSignupOTP(input.nationalId, input.phoneNumber, {
-        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
-      });
-
-      await sendVoiceOTP({
+      const code = await sendVoicePhoneVerification({
         to: input.phoneNumber,
-        code,
+      });
+      await createSignupOTP(input.nationalId, input.phoneNumber, {
+        ipAddress: ctx.headers.get("x-forwarded-for") ?? undefined,
+        otpCode: code,
       });
 
       return {
         success: true,
-        message:
-          "A verification code has been sent to your phone via voice call.",
+        message: "verification_code_sent_successfully",
         phoneNumberMasked: maskPhoneNumber(input.phoneNumber),
         devCode: env.NODE_ENV === "development" ? code : undefined,
       };
@@ -543,13 +540,13 @@ export const beneficiaryAuthRouter = {
       if (!isValidOTP) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Invalid or expired verification code",
+          message: "invalid_or_expired_verification_code",
         });
       }
 
       return {
         success: true,
-        message: "Phone number verified successfully.",
+        message: "phone_number_verified_successfully",
       };
     }),
 
@@ -566,7 +563,7 @@ export const beneficiaryAuthRouter = {
       if (!isValidOTP) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Invalid or expired verification code",
+          message: "invalid_or_expired_verification_code",
         });
       }
 
@@ -578,7 +575,7 @@ export const beneficiaryAuthRouter = {
         if (existingAccount) {
           throw new TRPCError({
             code: "CONFLICT",
-            message: "An account with this national ID already exists",
+            message: "an_account_with_this_national_id_already_exists",
           });
         }
 
@@ -714,7 +711,7 @@ export const beneficiaryAuthRouter = {
       if (!account) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Invalid national ID or password",
+          message: "invalid_national_id_or_password",
         });
       }
 
@@ -722,7 +719,7 @@ export const beneficiaryAuthRouter = {
         throw new TRPCError({
           code: "FORBIDDEN",
           message:
-            "Account is temporarily locked due to too many failed login attempts",
+            "account_is_temporarily_locked_due_to_too_many_failed_login_attempts",
         });
       }
 
@@ -730,14 +727,14 @@ export const beneficiaryAuthRouter = {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message:
-            "Account does not have a password set. Please use the forgot password flow to set one.",
+            "account_does_not_have_a_password_set_please_use_the_forgot_password_flow_to_set_one",
         });
       }
 
       if (account.status === "rejected") {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Your account has been rejected. Please contact support.",
+          message: "your_account_has_been_rejected_please_contact_support",
         });
       }
 
@@ -748,7 +745,7 @@ export const beneficiaryAuthRouter = {
       ) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Your account is suspended. Please contact support.",
+          message: "your_account_is_suspended_please_contact_support",
         });
       }
 
@@ -761,7 +758,7 @@ export const beneficiaryAuthRouter = {
         await incrementFailedLoginAttempts(account.id);
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Invalid national ID or password",
+          message: "invalid_national_id_or_password",
         });
       }
 
@@ -837,7 +834,7 @@ export const beneficiaryAuthRouter = {
         return {
           success: true,
           message:
-            "If an account exists with this national ID, a password reset code has been sent to your phone.",
+            "if_an_account_exists_with_this_national_id_a_password_reset_code_has_been_sent_to_your_phone",
         };
       }
 
@@ -852,7 +849,7 @@ export const beneficiaryAuthRouter = {
       return {
         success: true,
         message:
-          "A password reset code has been sent to your phone via voice call.",
+          "a_password_reset_code_has_been_sent_to_your_phone_via_voice_call",
         devToken: env.NODE_ENV === "development" ? resetToken : undefined,
       };
     }),
@@ -883,7 +880,7 @@ export const beneficiaryAuthRouter = {
       return {
         success: true,
         message:
-          "Password reset successfully. You can now login with your new password.",
+          "password_reset_successfully_you_can_now_login_with_your_new_password",
       };
     }),
 
@@ -905,12 +902,12 @@ export const beneficiaryAuthRouter = {
         status: account.status,
         message:
           account.status === "pending"
-            ? "Your account is pending approval."
+            ? "your_account_is_pending_approval"
             : account.status === "approved"
-              ? "Your account has been approved. You can login now."
+              ? "your_account_has_been_approved_you_can_login_now"
               : account.status === "rejected"
-                ? `Your account has been rejected. ${account.rejectionReason ?? ""}`
-                : "Your account status is unknown.",
+                ? `your_account_has_been_rejected_${account.rejectionReason ?? ""}`
+                : "your_account_status_is_unknown",
       };
     }),
 } satisfies TRPCRouterRecord;

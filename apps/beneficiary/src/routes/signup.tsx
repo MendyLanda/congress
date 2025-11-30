@@ -232,7 +232,7 @@ function SignupRouteComponent() {
       {step === "form" && (
         <form.AppForm>
           <form
-            className="space-y-8"
+            className="space-y-6"
             onSubmit={(event) => {
               event.preventDefault();
               void form.handleSubmit();

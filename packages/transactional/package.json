@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./twilio": {
-      "types": "./dist/twilio.d.ts",
-      "default": "./src/twilio.ts"
+    "./yemot": {
+      "types": "./dist/yemot.d.ts",
+      "default": "./src/yemot.ts"
     },
     "./env": {
       "types": "./dist/env.d.ts",
@@ -22,7 +22,6 @@
   },
   "dependencies": {
     "@t3-oss/env-core": "^0.13.8",
-    "twilio": "^5.10.4",
     "zod": "catalog:"
   },
   "devDependencies": {

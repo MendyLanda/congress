@@ -15,24 +15,24 @@ export function NumberField({ label, min, max }: NumberFieldProps) {
 
   return (
     <Field data-invalid={isInvalid}>
-			<FloatingField label={label} htmlFor={field.name}>
-				<Input
-					id={field.name}
-					type="number"
-					value={field.state.value}
-					min={min}
-					max={max}
-					onBlur={field.handleBlur}
-					onChange={(event) => {
-						const nextValue = Number.isNaN(event.target.valueAsNumber)
-							? 0
-							: event.target.valueAsNumber;
-						field.handleChange(nextValue);
-					}}
-					placeholder={" "}
-					inputMode="numeric"
-				/>
-			</FloatingField>
+      <FloatingField label={label}>
+        <Input
+          id={field.name}
+          type="number"
+          value={field.state.value}
+          min={min}
+          max={max}
+          onBlur={field.handleBlur}
+          onChange={(event) => {
+            const nextValue = Number.isNaN(event.target.valueAsNumber)
+              ? 0
+              : event.target.valueAsNumber;
+            field.handleChange(nextValue);
+          }}
+          placeholder={" "}
+          inputMode="numeric"
+        />
+      </FloatingField>
       {isInvalid && <FieldError errors={field.state.meta.errors} />}
     </Field>
   );

@@ -34,7 +34,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
         <Button
           variant="outline"
           size="sm"
-          className={cn("gap-2", className)}
+          className={cn("text-background gap-2 bg-inherit", className)}
           aria-label="Change language"
         >
           <LanguagesIcon className="size-4" />

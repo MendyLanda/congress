@@ -258,9 +258,9 @@ function generateOTPCode(): string {
  */
 export async function createOTP(
   accountId: string,
-  options?: { ipAddress?: string },
+  options?: { ipAddress?: string; otpCode?: string },
 ): Promise<string> {
-  const code = generateOTPCode();
+  const code = options?.otpCode ?? generateOTPCode();
   const expiresAt = new Date(Date.now() + OTP_EXPIRES_IN_MS);
 
   // Invalidate any existing unused OTPs for this account
@@ -320,9 +320,9 @@ export async function verifyOTP(
 export async function createSignupOTP(
   nationalId: string,
   phoneNumber: string,
-  options?: { ipAddress?: string },
+  options?: { ipAddress?: string; otpCode?: string },
 ): Promise<string> {
-  const code = generateOTPCode();
+  const code = options?.otpCode ?? generateOTPCode();
   const expiresAt = new Date(Date.now() + OTP_EXPIRES_IN_MS);
 
   // Invalidate any existing unused OTPs for this nationalId + phoneNumber combination

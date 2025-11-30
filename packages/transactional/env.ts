@@ -4,9 +4,7 @@ import { z } from "zod/v4";
 export function transactionalEnv() {
   return createEnv({
     server: {
-      TWILIO_ACCOUNT_SID: z.string(),
-      TWILIO_AUTH_TOKEN: z.string(),
-      TWILIO_PHONE_NUMBER: z.string(),
+      YEMOT_API_KEY: z.string(),
       NODE_ENV: z.enum(["development", "production"]).optional(),
     },
     runtimeEnv: process.env,
