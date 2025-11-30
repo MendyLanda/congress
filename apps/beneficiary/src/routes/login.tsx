@@ -113,7 +113,7 @@ function IdentifyStep({
 
   return (
     <form
-      className="flex w-full max-w-sm flex-col gap-4"
+      className="relative flex w-full max-w-sm flex-col gap-4"
       onSubmit={(event) => {
         event.preventDefault();
         void form.handleSubmit();
@@ -140,8 +140,9 @@ function IdentifyStep({
       />
       <Button
         type="submit"
-        className="text-foreground bg-accent hover:bg-background focus-visible:ring-accent/50 focus-visible:border-accent w-full cursor-pointer focus-visible:border focus-visible:ring-[3px]"
+        className="w-full"
         size="lg"
+        variant="inverted"
         disabled={isSubmitting || isBusy}
       >
         {isSubmitting ? t("checking") : t("login_button")}
@@ -149,7 +150,7 @@ function IdentifyStep({
 
       {isInvalid && (
         <FieldError
-          className="text-center"
+          className="absolute -bottom-6 left-0 w-full translate-y-full text-center text-base"
           errors={form.state.fieldMeta.nationalId.errors.map((error) => {
             console.log(error);
             if (typeof error === "string") {
@@ -163,7 +164,7 @@ function IdentifyStep({
               typeof error === "object" &&
               error &&
               "message" in error &&
-              error.message &&
+              (error.message as string) &&
               typeof error.message === "string"
             ) {
               try {

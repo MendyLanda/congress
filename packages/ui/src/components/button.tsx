@@ -20,11 +20,13 @@ export const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
+        inverted:
+          "text-foreground bg-accent hover:bg-background focus-visible:ring-accent/50 focus-visible:border-accent focus-visible:border focus-visible:ring-[3px]",
       },
       size: {
         default: "h-11 px-4 py-2 has-[>svg]:px-3",
         sm: "h-10 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5",
-        lg: "h-12 rounded-md px-6 has-[>svg]:px-4",
+        lg: "h-12 rounded-md px-6 text-base has-[>svg]:px-4",
         icon: "size-11",
       },
     },

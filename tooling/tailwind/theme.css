@@ -1,3 +1,4 @@
+@import "tw-animate-css";
 :root {
   --background: oklch(0.96 0.02 269.12);
   --foreground: oklch(0.34 0.1 258.38);

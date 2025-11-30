@@ -4,15 +4,19 @@ import i18n from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 
+import enLogin from "../../../../locals/en/login.json";
 import enTranslation from "../../../../locals/en/translation.json";
+import heLogin from "../../../../locals/he/login.json";
 import heTranslation from "../../../../locals/he/translation.json";
 
 export const resources = {
   en: {
     translation: enTranslation,
+    login: enLogin,
   },
   he: {
     translation: heTranslation,
+    login: heLogin,
   },
 } as const;
 

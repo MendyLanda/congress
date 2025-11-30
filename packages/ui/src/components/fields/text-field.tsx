@@ -32,7 +32,7 @@ export function TextField({
 
   return (
     <Field data-invalid={isInvalid}>
-      <FloatingField label={label} variant={variant}>
+      <FloatingField label={label} variant={variant} align={align}>
         <Input
           id={field.name}
           type={type}

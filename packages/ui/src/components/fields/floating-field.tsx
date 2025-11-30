@@ -10,7 +10,7 @@ interface FloatingFieldProps {
   filled?: boolean;
   className?: string;
   variant?: VariantProps<typeof inputVariants>["variant"];
-
+  align?: VariantProps<typeof inputVariants>["align"];
   children: React.ReactNode;
 }
 
@@ -28,6 +28,7 @@ export function FloatingField({
   filled = false,
   className,
   variant = "default",
+  align = "left",
   children,
 }: FloatingFieldProps) {
   const field = useFieldContext<string>();
@@ -38,9 +39,10 @@ export function FloatingField({
       data-variant={variant}
     >
       <label
+        data-align={align}
         htmlFor={field.name}
         className={cn(
-          "origin-start absolute top-1/2 block -translate-y-1/2 cursor-text px-2 transition-all",
+          "origin-start absolute top-1/2 block -translate-y-1/2 cursor-text px-2 text-start transition-all data-[align=center]:w-full data-[align=center]:text-center data-[align=left]:text-left data-[align=right]:text-right",
           // Default variant styling
           variant === "default" && "text-muted-foreground",
           // Inverted variant styling
