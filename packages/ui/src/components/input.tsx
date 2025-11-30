@@ -14,9 +14,9 @@ export const inputVariants = cva(
           "border-background text-background focus-visible:border-accent focus-visible:ring-accent/50 aria-invalid:border-[#efa5a5] aria-invalid:text-[#efa5a5]",
       },
       align: {
-        left: "text-left",
+        left: "text-start",
         center: "text-center",
-        right: "text-right",
+        right: "text-end",
       },
     },
     defaultVariants: {

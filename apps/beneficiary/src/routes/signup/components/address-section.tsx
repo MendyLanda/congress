@@ -1,11 +1,9 @@
 import type { UseFormReturn } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 
+import type { useAppForm } from "@congress/ui/fields";
 import { FieldGroup } from "@congress/ui/field";
-import {
-  AddressFieldsGroup,
-  type useAppForm,
-} from "@congress/ui/fields";
+import { AddressFieldsGroup } from "@congress/ui/fields";
 
 type Form = UseFormReturn<
   ReturnType<typeof useAppForm>["defaultValues"],
@@ -39,4 +37,3 @@ export function AddressSection({ form }: AddressSectionProps) {
     </section>
   );
 }
-
