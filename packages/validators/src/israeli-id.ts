@@ -47,7 +47,7 @@ export const zodIsraeliId = z
       return normalized !== null && luhnCheck(normalized);
     },
     {
-      message: "invalid_israeli_id",
+      message: "national_id_incorrect",
     },
   )
   .transform((value) => normalizeIsraeliId(value) ?? value);

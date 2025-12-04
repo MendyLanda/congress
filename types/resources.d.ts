@@ -28,10 +28,16 @@ interface Resources {
     "verify_code": "Verify Code",
     "verifying": "Verifying..."
   },
+  "signup": {
+    "address_information": "Address Information",
+    "delete_failed": "Delete failed",
+    "form_data_missing": "Form data is missing",
+    "password_required": "Password is required",
+    "upload_failed": "Upload failed"
+  },
   "translation": {
     "account_pending_message": "Your account is pending verification. You will be able to access all features once your account has been verified.",
     "account_pending_verification": "Account Pending Verification",
-    "address_information": "Address Information",
     "address_line_two": "Address Line 2",
     "address_line_two_placeholder": "Apartment, suite, unit, building, floor, etc.",
     "applicant_details": "Applicant Details",
@@ -54,7 +60,6 @@ interface Resources {
     "dashboard": "dashboard",
     "dashboard_welcome_message": "dashboard_welcome_message",
     "date_of_birth": "Date of Birth",
-    "delete_failed": "Failed to delete",
     "delete_post": "Delete Post",
     "document_identity_appendix": "Identity Card Appendix",
     "document_identity_card": "Identity Card",
@@ -106,7 +111,6 @@ interface Resources {
     "otp_sent_message_no_phone": "You will receive a phone call. Please enter the last 4 digits of the caller ID below.",
     "password": "Password",
     "password_min_length": "Password must be at least 8 characters long",
-    "password_required": "password_required",
     "passwords_do_not_match": "Passwords do not match",
     "personal_phone_number": "Personal Phone Number",
     "phone_number_optional": "Phone Number (Optional)",
@@ -136,7 +140,6 @@ interface Resources {
     "street": "Street",
     "submit_application": "Submit Application",
     "submitting": "Submitting...",
-    "upload_failed": "Upload failed. Please try again.",
     "verification_code": "Verification Code",
     "verification_code_label": "Last 4 Digits of Caller ID",
     "verify_code": "Verify Code",

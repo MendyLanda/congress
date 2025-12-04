@@ -1,5 +1,6 @@
 "use client";
 
+
 import type { VariantProps } from "class-variance-authority";
 import { useMemo } from "react";
 import { cva } from "class-variance-authority";
@@ -7,6 +8,7 @@ import { cva } from "class-variance-authority";
 import { cn } from "../lib/utils";
 import { Label } from "./label";
 import { Separator } from "./separator";
+import { useTranslation } from "react-i18next";
 
 export function FieldSet({
   className,
@@ -220,6 +222,7 @@ export function FieldError({
 }: React.ComponentProps<"div"> & {
   errors?: ({ message?: string } | undefined)[];
 } & VariantProps<typeof fieldErrorVariants>) {
+  const { t } = useTranslation();
   const content = useMemo(() => {
     if (children) {
       return children;
@@ -232,18 +235,11 @@ export function FieldError({
     }
 
     if (errors.length === 1 && errors[0]?.message) {
-      return errors[0].message;
+      return t(errors[0].message as never);
     }
 
-    return (
-      <ul className="ml-4 flex list-disc flex-col gap-1">
-        {errors.map(
-          (error, index) =>
-            error.message && <li key={index}>{error.message}</li>,
-        )}
-      </ul>
-    );
-  }, [children, maybeErrors]);
+    return errors.map((error) => t(error.message as never)).join(", ");
+  }, [children, maybeErrors, t]);
 
   if (!content) {
     return null;

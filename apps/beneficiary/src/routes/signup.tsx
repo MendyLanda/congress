@@ -30,10 +30,19 @@ import {
 import { SignupFormActions } from "./signup/components/signup-form-actions";
 import { SignupHeader } from "./signup/components/signup-header";
 import { SignupLayout } from "./signup/components/signup-layout";
+import { StepIndicator } from "./signup/components/step-indicator";
 
 type MaritalStatus = z.infer<typeof maritalStatusSchema>;
 
 type SignupStep = "form" | "otp" | "password";
+
+const TOTAL_STEPS = 3;
+
+const STEP_TO_NUMBER: Record<SignupStep, number> = {
+  form: 1,
+  password: 2,
+  otp: 3,
+};
 
 const otpSchema = z.object({
   otp: z
@@ -63,7 +72,7 @@ export const Route = createFileRoute("/signup")({
 });
 
 function SignupRouteComponent() {
-  const { t } = useTranslation();
+  const { t } = useTranslation("signup");
   const navigate = useNavigate();
   const { orpc } = useRouteContext({ from: "__root__" });
   const { session, refetchSession } = useBeneficiaryAuth();
@@ -143,8 +152,8 @@ function SignupRouteComponent() {
       identityAppendixUploadId: undefined as string | undefined,
     },
     validators: {
-      // @ts-expect-error - Type mismatch between optional and required undefined, but runtime validation works correctly
-      onSubmit: signupFormSchema,
+       // @ts-expect-error - Type mismatch between optional and required undefined, but runtime validation works correctly
+       onSubmit: signupFormSchema,
     },
     onSubmit: ({ value }) => {
       // Validate form and move to password step
@@ -265,6 +274,10 @@ function SignupRouteComponent() {
 
   return (
     <SignupLayout>
+      <StepIndicator
+        currentStep={STEP_TO_NUMBER[step]}
+        totalSteps={TOTAL_STEPS}
+      />
       <SignupHeader />
       {step === "form" && (
         <form.AppForm>

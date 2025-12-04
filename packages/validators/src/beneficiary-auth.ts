@@ -7,7 +7,7 @@ import { zodIsraeliId } from "./israeli-id";
 const MARITAL_STATUSES = ["single", "married", "divorced"] as const;
 
 const isoDateSchema = z
-  .string()
+  .string({ message: "date_of_birth_required" })
   .trim()
   .refine(
     (value) => {
@@ -18,7 +18,7 @@ const isoDateSchema = z
   );
 
 export const phoneNumberSchema = z
-  .string()
+  .string({ message: "phone_number_required" })
   .transform((value) => {
     return parsePhoneNumberFromString(value, "IL")!;
   })
@@ -42,19 +42,19 @@ export const optionalPhoneNumberSchema = z
   ) as unknown as z.ZodOptional<z.ZodString>;
 
 const nameSchema = z
-  .string()
+  .string({ message: "name_required" })
   .trim()
   .min(2, { message: "name_too_short" })
   .max(100, { message: "name_too_long" });
 
 const houseNumberSchema = z
-  .string()
+  .string({ message: "house_number_required" })
   .trim()
   .min(1, { message: "house_number_required" })
   .max(10, { message: "house_number_too_long" });
 
 const postalCodeSchema = z
-  .string()
+  .string({ message: "postal_code_required" })
   .trim()
   .min(5, { message: "postal_code_too_short" })
   .max(7, { message: "postal_code_too_long" });
@@ -64,7 +64,7 @@ const addressSchema = z.object({
   streetId: z.number().int().positive(),
   houseNumber: houseNumberSchema,
   addressLine2: z
-    .string()
+    .string({ message: "address_line2_required" })
     .trim()
     .max(50, { message: "address_line2_too_long" })
     .optional(),
