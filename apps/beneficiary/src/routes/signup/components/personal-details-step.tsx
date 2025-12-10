@@ -2,7 +2,8 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 
-import { AddressFieldsGroup, useAppForm, type AppForm } from "@congress/ui/fields";
+import type { AppForm } from "@congress/ui/fields";
+import { AddressFieldsGroup, useAppForm } from "@congress/ui/fields";
 import { orpcClient } from "@congress/ui/orpc";
 import { toast } from "@congress/ui/toast";
 import { UploadedFile } from "@congress/ui/upload";

@@ -3,7 +3,6 @@ import { useNavigate, useRouteContext } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 
-import { useAppForm } from "@congress/ui/fields";
 import { Button } from "@congress/ui/button";
 import {
   Field,
@@ -12,10 +11,12 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@congress/ui/field";
+import { useAppForm } from "@congress/ui/fields";
 import { Input } from "@congress/ui/input";
 import { toast } from "@congress/ui/toast";
-import { useBeneficiaryAuth } from "~/lib/beneficiary-auth-provider";
 import { signupFormSchema } from "@congress/validators";
+
+import { useBeneficiaryAuth } from "~/lib/beneficiary-auth-provider";
 
 const otpSchema = z.object({
   otp: z
@@ -24,14 +25,13 @@ const otpSchema = z.object({
     .regex(/^\d{4}$/, "invalid_otp"),
 });
 
-
 interface OtpStepProps {
   formData: Omit<
-  z.infer<typeof signupFormSchema>,
-  "otpCode" | "password"
-> | null;
+    z.infer<typeof signupFormSchema>,
+    "otpCode" | "password"
+  > | null;
   setStep: (step: "form" | "otp" | "password") => void;
-  password: string
+  password: string;
 }
 
 export function OtpStep({ formData, setStep, password }: OtpStepProps) {
@@ -39,7 +39,6 @@ export function OtpStep({ formData, setStep, password }: OtpStepProps) {
   const { orpc } = useRouteContext({ from: "__root__" });
   const { refetchSession } = useBeneficiaryAuth();
   const navigate = useNavigate();
-
 
   const otpForm = useAppForm({
     defaultValues: {

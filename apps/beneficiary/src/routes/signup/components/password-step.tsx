@@ -1,7 +1,8 @@
+import { useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 
-import { useAppForm, type AppForm } from "@congress/ui/fields";
+import type { AppForm } from "@congress/ui/fields";
 import { Button } from "@congress/ui/button";
 import {
   Field,
@@ -10,11 +11,11 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@congress/ui/field";
+import { useAppForm } from "@congress/ui/fields";
 import { Input } from "@congress/ui/input";
-import { passwordSchema } from "@congress/validators";
-import { toast } from "@congress/ui/toast";
-import { useMutation } from "@tanstack/react-query";
 import { orpc } from "@congress/ui/orpc";
+import { toast } from "@congress/ui/toast";
+import { passwordSchema } from "@congress/validators";
 
 const passwordStepSchema = z
   .object({

@@ -1,33 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import {
-  createFileRoute,
-  redirect,
-  useNavigate,
-  useRouteContext,
-} from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { z } from "zod/v4";
 
-import type { AppForm } from "@congress/ui/fields";
-import type { UploadedFile } from "@congress/ui/upload";
-import type { maritalStatusSchema } from "@congress/validators";
-import { AddressFieldsGroup, useAppForm } from "@congress/ui/fields";
-import { toast } from "@congress/ui/toast";
 import { signupFormSchema } from "@congress/validators";
 
 import { useBeneficiaryAuth } from "~/lib/beneficiary-auth-provider";
-import { orpcClient } from "~/lib/orpc";
-import { ApplicantDetailsSection } from "./signup/components/applicant-details-section";
-import { ChildrenSection } from "./signup/components/children-section";
-import { FamilyStatusSection } from "./signup/components/family-status-section";
-import { IdentityDocumentsSection } from "./signup/components/identity-documents-section";
-import { YeshivaDetails } from "./signup/components/kollel-details";
 import { OtpStep } from "./signup/components/otp-step";
-import {
-  PasswordStep,
-  passwordStepSchema,
-} from "./signup/components/password-step";
+import { PasswordStep } from "./signup/components/password-step";
 import { PersonalDetailsStep } from "./signup/components/personal-details-step";
 import { SignupHeader } from "./signup/components/signup-header";
 import { SignupLayout } from "./signup/components/signup-layout";
@@ -90,11 +69,7 @@ function SignupRouteComponent() {
         />
       )}
       {step === "otp" && (
-        <OtpStep
-          formData={formData}
-          setStep={setStep}
-          password={password}
-        />
+        <OtpStep formData={formData} setStep={setStep} password={password} />
       )}
       {step === "password" && (
         <PasswordStep
