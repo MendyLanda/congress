@@ -69,6 +69,7 @@ void i18n
     defaultNS,
     fallbackLng: "he",
     supportedLngs: ["he", "en"],
+    lng: "he",
     detection: {
       order: ["cookie"],
       lookupCookie: i18nCookieName,

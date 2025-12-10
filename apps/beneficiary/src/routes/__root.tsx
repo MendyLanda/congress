@@ -49,12 +49,9 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { i18n } = useTranslation();
-  const dir = getDirection(i18n.language);
-
   return (
-    <Direction.Provider dir={dir}>
-      <html lang={i18n.language} dir={dir} suppressHydrationWarning>
+    <Direction.Provider dir={"rtl"}>
+      <html lang={"he"} dir={"rtl"} suppressHydrationWarning>
         <head>
           <HeadContent />
         </head>
