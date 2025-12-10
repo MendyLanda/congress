@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as AuthLayoutRouteImport } from './routes/_auth-layout'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as LoginComponentsSetPasswordStepRouteImport } from './routes/login/components/set-password-step'
 import { Route as LoginComponentsPasswordStepRouteImport } from './routes/login/components/password-step'
 import { Route as LoginComponentsIdentifyStepRouteImport } from './routes/login/components/identify-step'
@@ -28,6 +30,10 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedRoute = AuthedRouteImport.update({
+  id: '/_authed',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthLayoutRoute = AuthLayoutRouteImport.update({
   id: '/_auth-layout',
   getParentRoute: () => rootRouteImport,
@@ -36,6 +42,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthedRoute,
 } as any)
 const LoginComponentsSetPasswordStepRoute =
   LoginComponentsSetPasswordStepRouteImport.update({
@@ -65,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRouteWithChildren
   '/signup': typeof SignupRoute
+  '/dashboard': typeof AuthedDashboardRoute
   '/api/orpc/$': typeof ApiOrpcSplatRoute
   '/login/components/identify-step': typeof LoginComponentsIdentifyStepRoute
   '/login/components/password-step': typeof LoginComponentsPasswordStepRoute
@@ -74,6 +86,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRouteWithChildren
   '/signup': typeof SignupRoute
+  '/dashboard': typeof AuthedDashboardRoute
   '/api/orpc/$': typeof ApiOrpcSplatRoute
   '/login/components/identify-step': typeof LoginComponentsIdentifyStepRoute
   '/login/components/password-step': typeof LoginComponentsPasswordStepRoute
@@ -83,8 +96,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_auth-layout': typeof AuthLayoutRoute
+  '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRouteWithChildren
   '/signup': typeof SignupRoute
+  '/_authed/dashboard': typeof AuthedDashboardRoute
   '/api/orpc/$': typeof ApiOrpcSplatRoute
   '/login/components/identify-step': typeof LoginComponentsIdentifyStepRoute
   '/login/components/password-step': typeof LoginComponentsPasswordStepRoute
@@ -96,6 +111,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/dashboard'
     | '/api/orpc/$'
     | '/login/components/identify-step'
     | '/login/components/password-step'
@@ -105,6 +121,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/dashboard'
     | '/api/orpc/$'
     | '/login/components/identify-step'
     | '/login/components/password-step'
@@ -113,8 +130,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_auth-layout'
+    | '/_authed'
     | '/login'
     | '/signup'
+    | '/_authed/dashboard'
     | '/api/orpc/$'
     | '/login/components/identify-step'
     | '/login/components/password-step'
@@ -124,6 +143,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthLayoutRoute: typeof AuthLayoutRoute
+  AuthedRoute: typeof AuthedRouteWithChildren
   LoginRoute: typeof LoginRouteWithChildren
   SignupRoute: typeof SignupRoute
   ApiOrpcSplatRoute: typeof ApiOrpcSplatRoute
@@ -145,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed': {
+      id: '/_authed'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_auth-layout': {
       id: '/_auth-layout'
       path: ''
@@ -158,6 +185,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authed/dashboard': {
+      id: '/_authed/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthedDashboardRouteImport
+      parentRoute: typeof AuthedRoute
     }
     '/login/components/set-password-step': {
       id: '/login/components/set-password-step'
@@ -190,6 +224,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthedRouteChildren {
+  AuthedDashboardRoute: typeof AuthedDashboardRoute
+}
+
+const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedDashboardRoute: AuthedDashboardRoute,
+}
+
+const AuthedRouteWithChildren =
+  AuthedRoute._addFileChildren(AuthedRouteChildren)
+
 interface LoginRouteChildren {
   LoginComponentsIdentifyStepRoute: typeof LoginComponentsIdentifyStepRoute
   LoginComponentsPasswordStepRoute: typeof LoginComponentsPasswordStepRoute
@@ -207,6 +252,7 @@ const LoginRouteWithChildren = LoginRoute._addFileChildren(LoginRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthLayoutRoute: AuthLayoutRoute,
+  AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRouteWithChildren,
   SignupRoute: SignupRoute,
   ApiOrpcSplatRoute: ApiOrpcSplatRoute,
