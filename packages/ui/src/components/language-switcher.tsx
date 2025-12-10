@@ -19,6 +19,7 @@ const languages = [
 ] as const;
 
 export function LanguageSwitcher({ className }: { className?: string }) {
+  return null;
   const { i18n } = useTranslation();
   const currentLanguage = i18n.language.split("-")[0] ?? "he";
 

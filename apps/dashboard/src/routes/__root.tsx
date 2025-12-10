@@ -11,7 +11,6 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Direction } from "radix-ui";
 import { useTranslation } from "react-i18next";
 
-import type { AppRouter } from "@congress/api";
 import { Toaster } from "@congress/ui/toast";
 
 import type { orpc } from "~/lib/orpc";
@@ -44,12 +43,9 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { i18n } = useTranslation();
-  const dir = i18n.dir();
-
   return (
-    <Direction.Provider dir={dir}>
-      <html lang={i18n.language} dir={dir} suppressHydrationWarning>
+    <Direction.Provider dir={"rtl"}>
+      <html lang={"he"} dir={"rtl"} suppressHydrationWarning>
         <head>
           <HeadContent />
         </head>

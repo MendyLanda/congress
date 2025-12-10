@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Command as CommandPrimitive } from "cmdk";
 import { Check } from "lucide-react";
 
@@ -44,6 +44,7 @@ export function AutoComplete<T extends string>({
   const [open, setOpen] = useState(false);
   const [internalSearchValue, setInternalSearchValue] =
     useState(incomingSearchValue);
+  const justSelectedRef = useRef(false);
 
   const searchValue = incomingSearchValue || internalSearchValue;
 
@@ -75,8 +76,16 @@ export function AutoComplete<T extends string>({
   };
 
   const onInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Don't reset if we just selected an item (prevents race condition with debounced search value)
+    if (justSelectedRef.current) {
+      return;
+    }
+
+    // Only reset if we have a selected value but the search value doesn't match
+    // and we're not clicking on the command list
     if (
       !e.relatedTarget?.hasAttribute("cmdk-list") &&
+      selectedValue &&
       labels[selectedValue] !== searchValue
     ) {
       reset();
@@ -86,10 +95,17 @@ export function AutoComplete<T extends string>({
   const onSelectItem = (inputValue: string) => {
     if (inputValue === selectedValue) {
       reset();
+      justSelectedRef.current = false;
     } else {
+      // Set the ref before any async operations to prevent blur from resetting
+      justSelectedRef.current = true;
       onSelectedValueChange(inputValue as T);
       onExternalSearchValueChange?.(labels[inputValue] ?? "");
       setInternalSearchValue(labels[inputValue] ?? "");
+      // Clear the ref after a short delay to allow blur events to be handled
+      setTimeout(() => {
+        justSelectedRef.current = false;
+      }, 100);
     }
     setOpen(false);
   };
