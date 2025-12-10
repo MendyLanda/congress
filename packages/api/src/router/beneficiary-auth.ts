@@ -1,9 +1,9 @@
+import { ORPCError } from "@orpc/server";
 import {
   deleteCookie,
   getCookie,
   setCookie,
 } from "@tanstack/react-start/server";
-import { ORPCError } from "@orpc/server";
 
 import type { BeneficiarySignupInput } from "@congress/validators";
 import {
@@ -34,6 +34,7 @@ import {
   PersonDocument,
   PersonRelationship,
   Upload,
+  YeshivaDetails,
 } from "@congress/db/schema";
 import { sendVoicePhoneVerification } from "@congress/transactional/yemot";
 import {
@@ -51,6 +52,7 @@ import {
 import {
   identityAppendixDocumentType,
   identityCardDocumentType,
+  yeshivaCertificateDocumentType,
 } from "@congress/validators/constants";
 
 import { env } from "../../env";
@@ -150,7 +152,7 @@ async function upsertPerson(
     })
     .returning();
 
-    if (!created) {
+  if (!created) {
     throw new ORPCError("INTERNAL_SERVER_ERROR", {
       message: "failed_to_create_person",
     });
@@ -255,6 +257,40 @@ async function upsertAddress(
   });
 }
 
+async function upsertYeshivaDetails(
+  tx: TransactionClient,
+  beneficiaryNationalId: string,
+  yeshivaDetails: BeneficiarySignupInput["yeshivaDetails"],
+) {
+  const existing = await tx.query.YeshivaDetails.findFirst({
+    where: eq(YeshivaDetails.beneficiaryNationalId, beneficiaryNationalId),
+  });
+
+  if (existing) {
+    await tx
+      .update(YeshivaDetails)
+      .set({
+        yeshivaName: yeshivaDetails.yeshivaName,
+        headOfTheYeshivaName: yeshivaDetails.headOfTheYeshivaName,
+        headOfTheYeshivaPhone: yeshivaDetails.headOfTheYeshivaPhone,
+        yeshivaWorkType: yeshivaDetails.yeshivaWorkType,
+        yeshivaCertificateUploadId: yeshivaDetails.yeshivaCertificateUploadId,
+        yeshivaType: yeshivaDetails.yeshivaType,
+      })
+      .where(eq(YeshivaDetails.id, existing.id));
+  } else {
+    await tx.insert(YeshivaDetails).values({
+      beneficiaryNationalId,
+      yeshivaName: yeshivaDetails.yeshivaName,
+      headOfTheYeshivaName: yeshivaDetails.headOfTheYeshivaName,
+      headOfTheYeshivaPhone: yeshivaDetails.headOfTheYeshivaPhone,
+      yeshivaWorkType: yeshivaDetails.yeshivaWorkType,
+      yeshivaCertificateUploadId: yeshivaDetails.yeshivaCertificateUploadId,
+      yeshivaType: yeshivaDetails.yeshivaType,
+    });
+  }
+}
+
 async function ensureRelationship(
   tx: TransactionClient,
   params: {
@@ -305,6 +341,10 @@ async function storeDocuments(
     documentTypeId: string;
   }[],
 ) {
+  if (documents.length === 0) {
+    return;
+  }
+
   await tx
     .update(Upload)
     .set({
@@ -587,8 +627,9 @@ export const beneficiaryAuthRouter = {
           input.homePhoneNumber,
         );
         await upsertAddress(tx, applicant.id, input.address);
+        await upsertYeshivaDetails(tx, input.nationalId, input.yeshivaDetails);
 
-        const passwordHash = await hashPassword(input.password as string);
+        const passwordHash = await hashPassword(input.password);
 
         const beneficiaryAccountId = createID("beneficiaryAccount");
         await tx.insert(BeneficiaryAccount).values({
@@ -665,6 +706,12 @@ export const beneficiaryAuthRouter = {
           documents.push({
             uploadId: input.identityAppendixUploadId,
             documentTypeId: identityAppendixDocumentType.id,
+          });
+        }
+        if (input.yeshivaDetails.yeshivaCertificateUploadId) {
+          documents.push({
+            uploadId: input.yeshivaDetails.yeshivaCertificateUploadId,
+            documentTypeId: yeshivaCertificateDocumentType.id,
           });
         }
         await storeDocuments(tx, applicant.id, documents);

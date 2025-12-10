@@ -10,8 +10,9 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 
 import { Button } from "@congress/ui/button";
-import { FieldError, FieldGroup } from "@congress/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@congress/ui/field";
 import { useAppForm } from "@congress/ui/fields";
+import { Input } from "@congress/ui/input";
 import { LanguageSwitcher } from "@congress/ui/language-switcher";
 import { SquareLogo } from "@congress/ui/square-logo";
 import { toast } from "@congress/ui/toast";
@@ -99,7 +100,7 @@ function IdentifyStep({
             fields: {
               nationalId:
                 error instanceof Error
-                  ? error.message || t("national_id_incorrect")
+                  ? t((error.message || "national_id_incorrect") as any)
                   : t("national_id_incorrect"),
             },
           };
@@ -155,7 +156,6 @@ function IdentifyStep({
         <FieldError
           className="absolute -bottom-6 left-0 w-full translate-y-full text-center text-base"
           errors={form.state.fieldMeta.nationalId.errors.map((error) => {
-            console.log(error);
             if (typeof error === "string") {
               try {
                 return { message: t(error as never) };
@@ -227,18 +227,31 @@ function PasswordStep({
       <div className="text-muted-foreground space-y-2 text-sm">
         <p>{t("login_national_id_label", { id: nationalId })}</p>
       </div>
-      <FieldGroup>
-        <form.AppField name="password">
-          {(field) => (
-            <field.TextField
-              label={t("password")}
-              type="password"
-              disabled={isSubmitting || isBusy}
-            />
-          )}
-        </form.AppField>
-      </FieldGroup>
-      <div className="space-y-3">
+      <form.Field
+        name="password"
+        children={(field) => {
+          const isInvalid =
+            field.state.meta.isTouched && !field.state.meta.isValid;
+          return (
+            <Field data-invalid={isInvalid} className="mb-4 gap-1">
+              <FieldLabel htmlFor={field.name}>{t("password")}</FieldLabel>
+              <Input
+                id={field.name}
+                type="password"
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(event) => field.handleChange(event.target.value)}
+                disabled={isSubmitting || isBusy}
+                aria-invalid={isInvalid}
+              />
+              <div className="h-2">
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+              </div>
+            </Field>
+          );
+        }}
+      />
+      <div className="space-y-2">
         <Button
           type="submit"
           className="w-full"
@@ -486,14 +499,16 @@ function LoginRouteComponent() {
     orpc.beneficiaryAuth.sendOTP.mutationOptions({
       onSuccess: (data) => {
         setMaskedPhoneNumber(data.phoneNumberMasked);
-        toast.success(data.message);
+        // @ts-expect-error - Backend returns keys
+        toast.success(t(data.message));
         if (data.devCode) {
           console.info("[DEV] OTP Code:", data.devCode);
         }
         setStep("otp");
       },
       onError: (error) => {
-        toast.error(error.message);
+        // @ts-expect-error - Backend returns keys
+        toast.error(t(error.message));
       },
     }),
   );
@@ -506,7 +521,8 @@ function LoginRouteComponent() {
         await navigate({ to: "/", replace: true });
       },
       onError: (error) => {
-        toast.error(error.message);
+        // @ts-expect-error - Backend returns keys
+        toast.error(t(error.message));
       },
     }),
   );
@@ -518,7 +534,8 @@ function LoginRouteComponent() {
         setStep("setPassword");
       },
       onError: (error) => {
-        toast.error(error.message);
+        // @ts-expect-error - Backend returns keys
+        toast.error(t(error.message));
       },
     }),
   );
@@ -526,12 +543,14 @@ function LoginRouteComponent() {
   const setPasswordMutation = useMutation(
     orpc.beneficiaryAuth.verifyOTPAndSetPassword.mutationOptions({
       onSuccess: async (data) => {
-        toast.success(data.message);
+        // @ts-expect-error - Backend returns keys
+        toast.success(t(data.message));
         await refetchSession();
         await navigate({ to: "/", replace: true });
       },
       onError: (error) => {
-        toast.error(error.message);
+        // @ts-expect-error - Backend returns keys
+        toast.error(t(error.message));
       },
     }),
   );
@@ -544,7 +563,7 @@ function LoginRouteComponent() {
 
   const isBusy =
     sendOtpMutation.isPending ||
-    loginMutation.isPending ||
+    // loginMutation.isPending ||
     verifyOtpMutation.isPending ||
     setPasswordMutation.isPending;
 
