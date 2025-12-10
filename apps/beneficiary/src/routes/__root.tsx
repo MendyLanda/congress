@@ -14,7 +14,7 @@ import { Toaster } from "@congress/ui/toast";
 
 import type { orpc } from "~/lib/orpc";
 import { BeneficiaryAuthProvider } from "~/lib/beneficiary-auth-provider";
-import { setSSRLanguage } from "~/lib/i18n";
+import { getDirection, setSSRLanguage } from "~/lib/i18n";
 import appCss from "~/styles.css?url";
 
 import "@fontsource-variable/rubik";
@@ -50,7 +50,7 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { i18n } = useTranslation();
-  const dir = i18n.dir();
+  const dir = getDirection(i18n.language);
 
   return (
     <Direction.Provider dir={dir}>

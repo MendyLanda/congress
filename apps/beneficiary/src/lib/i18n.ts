@@ -86,9 +86,15 @@ void i18n
     interpolation: { escapeValue: false },
   });
 
+export const RTL_LANGUAGES = ["he", "ar", "fa", "ur"] as const;
+
+export const getDirection = (language: string): "rtl" | "ltr" => {
+  return RTL_LANGUAGES.some((rtl) => language.startsWith(rtl)) ? "rtl" : "ltr";
+};
+
 export const setSSRLanguage = createIsomorphicFn().server(async () => {
   const language = getCookie(i18nCookieName);
-  await i18n.changeLanguage(language ?? "en");
+  await i18n.changeLanguage(language ?? "he");
 });
 
 export default i18n;
