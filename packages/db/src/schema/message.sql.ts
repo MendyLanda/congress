@@ -1,13 +1,5 @@
 import { relations } from "drizzle-orm";
-import {
-  bigint,
-  bigserial,
-  index,
-  jsonb,
-  pgEnum,
-  text,
-  timestamp,
-} from "drizzle-orm/pg-core";
+import { index, jsonb, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
 
 import { createTable } from "../create-table";
 import { ulid } from "../types";
@@ -48,18 +40,18 @@ export const messageRecipientTypeEnum = pgEnum("message_recipient_type", [
 export const Message = createTable(
   "message",
   {
-    id: bigserial({ mode: "number" }).primaryKey(),
+    id: ulid("id", "message").primaryKey(),
     messageType: messageTypeEnum("message_type").notNull(),
     recipientType: messageRecipientTypeEnum("recipient_type").notNull(),
-    recipientBeneficiaryAccountId: ulid("beneficiaryAccount").references(
-      () => BeneficiaryAccount.id,
-      { onDelete: "cascade" },
-    ), // For specific beneficiary messages
-    applicationId: bigint("application_id", { mode: "number" }).references(
+    recipientBeneficiaryAccountId: ulid(
+      "recipient_beneficiary_account_id",
+      "beneficiaryAccount",
+    ).references(() => BeneficiaryAccount.id, { onDelete: "cascade" }), // For specific beneficiary messages
+    applicationId: ulid("application_id", "application").references(
       () => Application.id,
       { onDelete: "set null" },
     ), // Context if related to application
-    senderUserId: ulid("user").references(() => User.id, {
+    senderUserId: ulid("sender_user_id", "user").references(() => User.id, {
       onDelete: "set null",
     }), // Staff member sender
     subject: text("subject"),

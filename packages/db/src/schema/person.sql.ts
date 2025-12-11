@@ -39,7 +39,7 @@ export const contactTypeEnum = pgEnum("contact_type", personContactTypes);
 export const PersonContact = createTable(
   "person_contact",
   {
-    id: ulid("personContact").primaryKey(),
+    id: ulid("id", "personContact").primaryKey(),
     personId: bigint({ mode: "number" }).notNull(),
     value: text().notNull(),
     contactType: contactTypeEnum(),
@@ -60,7 +60,7 @@ export const PersonContact = createTable(
 export const PersonAddress = createTable(
   "person_address",
   {
-    id: ulid("personAddress").primaryKey(),
+    id: ulid("id", "personAddress").primaryKey(),
     personId: bigint({ mode: "number" }).notNull(),
     cityId: bigint({ mode: "number" }).notNull(),
     streetId: bigint({ mode: "number" }).notNull(),
@@ -99,7 +99,7 @@ export const relationshipTypeEnum = pgEnum(
 export const PersonRelationship = createTable(
   "person_relationship",
   {
-    id: ulid("personRelationship").primaryKey(),
+    id: ulid("id", "personRelationship").primaryKey(),
     personId: bigint({ mode: "number" })
       .notNull()
       .references(() => Person.id, { onDelete: "cascade" }),

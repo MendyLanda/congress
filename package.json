@@ -25,7 +25,14 @@
     "postinstall": "bun lint:ws",
     "typecheck": "turbo run typecheck",
     "ui-add": "turbo run ui-add",
-    "update:license": "bun scripts/update-license-year.ts"
+    "update:license": "bun scripts/update-license-year.ts",
+    "lint-staged": "lint-staged"
+  },
+  "pre-commit": [
+    "lint-staged"
+  ],
+  "lint-staged": {
+    "**/*.{js,jsx,ts,tsx,json,css,md}": "bun format:fix"
   },
   "devDependencies": {
     "@congress/prettier-config": "workspace:*",
@@ -33,6 +40,8 @@
     "concurrently": "^9.2.1",
     "dotenv-cli": "^10.0.0",
     "i18next-cli": "1.22.0",
+    "lint-staged": "^16.2.7",
+    "pre-commit": "^1.2.2",
     "prettier": "catalog:",
     "turbo": "^2.6.0",
     "typescript": "catalog:"

@@ -52,7 +52,7 @@ export const Payment = createTable(
     personId: bigint("person_id", { mode: "number" })
       .notNull()
       .references(() => Person.id, { onDelete: "restrict" }),
-    applicationId: bigint("application_id", { mode: "number" }).references(
+    applicationId: ulid("application_id", "application").references(
       () => Application.id,
       { onDelete: "set null" },
     ), // Nullable for ad-hoc payments
@@ -64,13 +64,16 @@ export const Payment = createTable(
     paymentDate: date("payment_date", { mode: "date" }).notNull(),
     status: paymentStatusEnum("status").notNull().default("pending"),
     receiverName: text("receiver_name"), // Who physically received the payment
-    receiverSignatureUploadId: ulid("upload").references(() => Upload.id, {
+    receiverSignatureUploadId: ulid(
+      "receiver_signature_upload_id",
+      "upload",
+    ).references(() => Upload.id, {
       onDelete: "set null",
     }),
     referenceNumber: text("reference_number"), // Check number, transaction ID, etc.
     bankAccountLast4: char("bank_account_last_4", { length: 4 }), // Last 4 digits of account
     notes: text("notes"), // Staff notes about the payment
-    recordedByUserId: ulid("user")
+    recordedByUserId: ulid("recorded_by_user_id", "user")
       .notNull()
       .references(() => User.id, { onDelete: "set null" }),
   },

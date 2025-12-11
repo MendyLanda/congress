@@ -1,6 +1,5 @@
 import { relations } from "drizzle-orm";
 import {
-  bigint,
   bigserial,
   boolean,
   date,
@@ -32,7 +31,7 @@ export const enrollmentTypeEnum = pgEnum("enrollment_type", [
 export const Program = createTable(
   "program",
   {
-    id: bigserial({ mode: "number" }).primaryKey(),
+    id: ulid("id", "program").primaryKey(),
     name: text("name").notNull(),
     description: text("description"),
     enrollmentType: enrollmentTypeEnum("enrollment_type").notNull(),
@@ -40,7 +39,7 @@ export const Program = createTable(
       .notNull()
       .default(false),
     isVisibleInPortal: boolean("is_visible_in_portal").notNull().default(true),
-    createdByUserId: ulid("user")
+    createdByUserId: ulid("created_by_user_id", "user")
       .notNull()
       .references(() => User.id, { onDelete: "set null" }),
     timeArchived: timestamp("time_archived"),
@@ -57,7 +56,7 @@ export const ProgramVersion = createTable(
   "program_version",
   {
     id: bigserial({ mode: "number" }).primaryKey(),
-    programId: bigint("program_id", { mode: "number" })
+    programId: ulid("program_id", "program")
       .notNull()
       .references(() => Program.id, { onDelete: "cascade" }),
     versionName: text("version_name").notNull(),
@@ -65,7 +64,7 @@ export const ProgramVersion = createTable(
     startDate: date("start_date", { mode: "date" }).notNull(),
     endDate: date("end_date", { mode: "date" }).notNull(),
     isActive: boolean("is_active").notNull().default(true),
-    createdByUserId: ulid("user")
+    createdByUserId: ulid("created_by_user_id", "user")
       .notNull()
       .references(() => User.id, { onDelete: "set null" }),
   },

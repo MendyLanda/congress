@@ -41,12 +41,12 @@ export const beneficiaryDocumentStatusEnum = pgEnum(
 export const BeneficiaryAccount = createTable(
   "beneficiary_account",
   {
-    id: ulid("beneficiaryAccount").primaryKey(),
+    id: ulid("id", "beneficiaryAccount").primaryKey(),
     nationalId: varchar("national_id", { length: 10 }).notNull().unique(), // 10 digits
     passwordHash: text("password_hash"), // Nullable - accounts can be created without password initially
     status: beneficiaryAccountStatusEnum("status").notNull().default("pending"),
     timeApproved: timestamp("time_approved"),
-    approvedBy: ulid("user").references(() => User.id, {
+    approvedBy: ulid("approved_by_user_id", "user").references(() => User.id, {
       onDelete: "set null",
     }),
     rejectionReason: text("rejection_reason"),
@@ -69,7 +69,7 @@ export const BeneficiaryAccount = createTable(
 export const BeneficiarySession = createTable(
   "beneficiary_session",
   {
-    id: ulid("beneficiarySession").primaryKey(),
+    id: ulid("id", "beneficiarySession").primaryKey(),
     accountId: text("account_id")
       .notNull()
       .references(() => BeneficiaryAccount.id, { onDelete: "cascade" }),
@@ -122,9 +122,12 @@ export const BeneficiaryOTP = createTable(
     }), // Nullable for signup OTP
     nationalId: varchar("national_id", { length: 10 }), // For signup OTP (when accountId is null)
     phoneNumber: varchar("phone_number", { length: 20 }), // For signup OTP (when accountId is null)
-    personContactId: ulid("personContact").references(() => PersonContact.id, {
-      onDelete: "cascade",
-    }),
+    personContactId: ulid("person_contact_id", "personContact").references(
+      () => PersonContact.id,
+      {
+        onDelete: "cascade",
+      },
+    ),
     code: varchar("code", { length: 6 }).notNull(), // 6-digit OTP code
     expiresAt: timestamp("expires_at").notNull(),
     usedAt: timestamp("used_at"),

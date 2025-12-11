@@ -27,6 +27,7 @@ import {
 import { and, createID, eq, inArray, isNull, or } from "@congress/db";
 import { db } from "@congress/db/client";
 import {
+  Application,
   BeneficiaryAccount,
   Person,
   PersonAddress,
@@ -50,6 +51,7 @@ import {
   beneficiarySignupSchema,
 } from "@congress/validators";
 import {
+  AvrechimPassoverGrantProgramVersion,
   identityAppendixDocumentType,
   identityCardDocumentType,
   yeshivaCertificateDocumentType,
@@ -113,6 +115,51 @@ type TransactionClient = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 type RelationshipType =
   (typeof PersonRelationship.$inferInsert)["relationshipType"];
+
+/**
+ * Check if a phone number belongs to another beneficiary account
+ * @param phoneNumber The phone number to check
+ * @param excludeNationalId The national ID to exclude from the check (the current user's national ID)
+ * @returns true if the phone number belongs to another beneficiary, false otherwise
+ */
+async function isPhoneNumberTakenByAnotherBeneficiary(
+  phoneNumber: string,
+  excludeNationalId: string,
+): Promise<boolean> {
+  // Find all PersonContact records with this phone number
+  const contacts = await db.query.PersonContact.findMany({
+    where: and(
+      eq(PersonContact.value, phoneNumber),
+      eq(PersonContact.contactType, "phone"),
+    ),
+    with: {
+      person: {
+        columns: {
+          nationalId: true,
+        },
+      },
+    },
+  });
+
+  if (contacts.length === 0) {
+    return false;
+  }
+
+  // Check if any of these persons have a BeneficiaryAccount with a different nationalId
+  const nationalIds = contacts
+    .map((contact) => contact.person.nationalId)
+    .filter((id) => id !== excludeNationalId);
+
+  if (nationalIds.length === 0) {
+    return false;
+  }
+
+  const existingAccounts = await db.query.BeneficiaryAccount.findMany({
+    where: inArray(BeneficiaryAccount.nationalId, nationalIds),
+  });
+
+  return existingAccounts.length > 0;
+}
 
 async function upsertPerson(
   tx: TransactionClient,
@@ -335,14 +382,20 @@ async function ensureRelationship(
   return created;
 }
 
-async function storeDocuments(
-  tx: TransactionClient,
-  personId: number,
+async function storePersonDocuments({
+  tx,
+  documents,
+  personId,
+  applicationId,
+}: {
+  tx: TransactionClient;
+  personId: number;
+  applicationId?: string;
   documents: {
     uploadId: string;
     documentTypeId: string;
-  }[],
-) {
+  }[];
+}) {
   if (documents.length === 0) {
     return;
   }
@@ -363,6 +416,7 @@ async function storeDocuments(
       personId,
       documentTypeId: document.documentTypeId,
       uploadId: document.uploadId,
+      applicationId,
     })),
   );
 }
@@ -546,6 +600,18 @@ export const beneficiaryAuthRouter = {
         });
       }
 
+      // Check if phone number belongs to another beneficiary
+      const isPhoneTaken = await isPhoneNumberTakenByAnotherBeneficiary(
+        input.phoneNumber,
+        input.nationalId,
+      );
+
+      if (isPhoneTaken) {
+        throw new ORPCError("CONFLICT", {
+          message: "phone_number_already_registered_to_another_account",
+        });
+      }
+
       const code = await sendVoicePhoneVerification({
         to: input.phoneNumber,
       });
@@ -598,6 +664,18 @@ export const beneficiaryAuthRouter = {
         });
       }
 
+      // Check if phone number belongs to another beneficiary
+      const isPhoneTaken = await isPhoneNumberTakenByAnotherBeneficiary(
+        input.personalPhoneNumber,
+        input.nationalId,
+      );
+
+      if (isPhoneTaken) {
+        throw new ORPCError("CONFLICT", {
+          message: "phone_number_already_registered_to_another_account",
+        });
+      }
+
       const accountId = await db.transaction(async (tx) => {
         const existingAccount = await tx.query.BeneficiaryAccount.findFirst({
           where: eq(BeneficiaryAccount.nationalId, input.nationalId),
@@ -609,7 +687,7 @@ export const beneficiaryAuthRouter = {
           });
         }
 
-        const applicant = await upsertPerson(
+        const applicantPerson = await upsertPerson(
           tx,
           {
             nationalId: input.nationalId,
@@ -624,11 +702,11 @@ export const beneficiaryAuthRouter = {
 
         await upsertPhoneContacts(
           tx,
-          applicant.id,
+          applicantPerson.id,
           input.personalPhoneNumber,
           input.homePhoneNumber,
         );
-        await upsertAddress(tx, applicant.id, input.address);
+        await upsertAddress(tx, applicantPerson.id, input.address);
         await upsertYeshivaDetails(tx, input.nationalId, input.yeshivaDetails);
 
         const passwordHash = await hashPassword(input.password);
@@ -667,7 +745,7 @@ export const beneficiaryAuthRouter = {
           }
 
           await ensureRelationship(tx, {
-            personId: applicant.id,
+            personId: applicantPerson.id,
             relatedPersonId: spousePerson.id,
             relationshipType,
           });
@@ -685,13 +763,13 @@ export const beneficiaryAuthRouter = {
             });
 
             await ensureRelationship(tx, {
-              personId: applicant.id,
+              personId: applicantPerson.id,
               relatedPersonId: childPerson.id,
               relationshipType: "child",
             });
             await ensureRelationship(tx, {
               personId: childPerson.id,
-              relatedPersonId: applicant.id,
+              relatedPersonId: applicantPerson.id,
               relationshipType: "parent",
             });
           }
@@ -716,7 +794,25 @@ export const beneficiaryAuthRouter = {
             documentTypeId: yeshivaCertificateDocumentType.id,
           });
         }
-        await storeDocuments(tx, applicant.id, documents);
+        // Automatically submit an application for review.
+        // Normally (in the future), this will be done in a separate step and not as part of the signup process.
+        const [application] = await tx
+          .insert(Application)
+          .values({
+            id: createID("application"),
+            personId: applicantPerson.id,
+            programVersionId: AvrechimPassoverGrantProgramVersion.id,
+            beneficiaryAccountId,
+            status: "pending_review",
+          })
+          .returning();
+
+        await storePersonDocuments({
+          tx,
+          personId: applicantPerson.id,
+          applicationId: application!.id,
+          documents,
+        });
 
         return beneficiaryAccountId;
       });
@@ -841,6 +937,14 @@ export const beneficiaryAuthRouter = {
 
     const account = await db.query.BeneficiaryAccount.findFirst({
       where: eq(BeneficiaryAccount.id, session.accountId),
+      with: {
+        person: {
+          columns: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
     });
 
     if (!account) {
@@ -852,6 +956,9 @@ export const beneficiaryAuthRouter = {
         id: account.id,
         nationalId: account.nationalId,
         status: account.status,
+      },
+      person: {
+        firstName: account.person.firstName,
       },
     };
   }),

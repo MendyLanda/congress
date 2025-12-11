@@ -22,7 +22,7 @@ export const uploadStatusEnum = pgEnum("upload_status", [
 export const Upload = createTable(
   "upload",
   {
-    id: ulid("upload").primaryKey(),
+    id: ulid("id", "upload").primaryKey(),
     status: uploadStatusEnum("status").notNull().default("pending"),
     storageKey: text().notNull().unique(),
     bucket: text().notNull(),
@@ -31,13 +31,16 @@ export const Upload = createTable(
     fileSize: bigint({ mode: "number" }),
     base64Md5Hash: text().notNull(),
     objectUrl: text().notNull(),
-    uploadedByBeneficiaryAccountId: ulid("beneficiaryAccount").references(
-      () => BeneficiaryAccount.id,
-      { onDelete: "set null" },
+    uploadedByBeneficiaryAccountId: ulid(
+      "uploaded_by_beneficiary_account_id",
+      "beneficiaryAccount",
+    ).references(() => BeneficiaryAccount.id, { onDelete: "set null" }),
+    uploadedByUserId: ulid("uploaded_by_user_id", "user").references(
+      () => User.id,
+      {
+        onDelete: "set null",
+      },
     ),
-    uploadedByUserId: ulid("user").references(() => User.id, {
-      onDelete: "set null",
-    }),
     public: boolean().notNull().default(false),
   },
   (table) => [

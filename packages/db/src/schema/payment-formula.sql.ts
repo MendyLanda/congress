@@ -31,7 +31,7 @@ export const ProgramPaymentFormula = createTable(
     baseAmount: numeric("base_amount", { precision: 10, scale: 2 }).notNull(),
     formulaFields: jsonb("formula_fields"), // Array of field calculations: [{field: "numberOfPersons", multiplier: 100}, ...]
     description: text("description"),
-    createdByUserId: ulid("user")
+    createdByUserId: ulid("created_by_user_id", "user")
       .notNull()
       .references(() => User.id, { onDelete: "set null" }),
   },
@@ -51,7 +51,7 @@ export const ApplicationCalculation = createTable(
   "application_calculation",
   {
     id: bigserial({ mode: "number" }).primaryKey(),
-    applicationId: bigint("application_id", { mode: "number" })
+    applicationId: ulid("application_id", "application")
       .notNull()
       .references(() => Application.id, { onDelete: "cascade" }),
     formulaUsed: jsonb("formula_used").notNull(), // Snapshot of formula at calculation time
@@ -62,7 +62,7 @@ export const ApplicationCalculation = createTable(
     }).notNull(), // Result of formula calculation
     finalAmount: numeric("final_amount", { precision: 10, scale: 2 }).notNull(), // May be adjusted by staff
     adjustmentReason: text("adjustment_reason"), // Required if final differs from calculated
-    calculatedByUserId: ulid("user")
+    calculatedByUserId: ulid("calculated_by_user_id", "user")
       .notNull()
       .references(() => User.id, { onDelete: "set null" }),
     timeCalculated: timestamp("time_calculated").notNull().defaultNow(),

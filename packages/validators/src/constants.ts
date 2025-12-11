@@ -11,6 +11,9 @@ export const dbIdPrefixes = {
   beneficiaryDocument: "ben_dcm",
   upload: "upl",
   documentType: "dcm_type",
+  program: "prog",
+  application: "app",
+  message: "msg",
 } as const;
 
 function _createFixedId<
@@ -66,4 +69,44 @@ export const yeshivaCertificateDocumentType: SystemDocumentType = {
   id: _createFixedId("documentType", "tim_confirmation"),
   allowedFileTypes: ["image/*", "application/pdf"],
   maxFileSize: 10485760, // 10MB
+};
+
+interface Program {
+  name: string;
+  enrollmentType: "self_enrolled" | "committee_enrolled";
+  createdByUserId: string;
+  id: string;
+  description?: string | null | undefined;
+  requiresHouseholdInfo?: boolean | undefined;
+  isVisibleInPortal?: boolean | undefined;
+}
+
+export const AvrechimPassoverGrantProgram: Program = {
+  name: "מענק קמחא דפסחא לאברכים",
+  enrollmentType: "self_enrolled",
+  createdByUserId: SYSTEM_USER_ID,
+  id: _createFixedId("program", "avrechim_passover_grant"),
+  requiresHouseholdInfo: true,
+  isVisibleInPortal: true,
+};
+
+interface ProgramVersion {
+  createdByUserId: string;
+  programId: string;
+  versionName: string;
+  startDate: Date;
+  endDate: Date;
+  id: number;
+  description?: string | null | undefined;
+
+  isActive?: boolean | undefined;
+}
+export const AvrechimPassoverGrantProgramVersion: ProgramVersion = {
+  createdByUserId: SYSTEM_USER_ID,
+  programId: AvrechimPassoverGrantProgram.id,
+  versionName: "פסח 2026",
+  startDate: new Date(),
+  endDate: new Date("2026-04-15"),
+  id: 1,
+  isActive: true,
 };

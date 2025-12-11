@@ -35,9 +35,12 @@ export const householdMemberRoleEnum = pgEnum("household_member_role", [
  */
 export const Household = createTable("household", {
   id: bigserial({ mode: "number" }).primaryKey(),
-  primaryAddressId: ulid("personAddress").references(() => PersonAddress.id, {
-    onDelete: "set null",
-  }),
+  primaryAddressId: ulid("primary_address_id", "personAddress").references(
+    () => PersonAddress.id,
+    {
+      onDelete: "set null",
+    },
+  ),
   name: text("name"), // Optional name like "Cohen Household"
 });
 
