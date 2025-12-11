@@ -1,14 +1,29 @@
-import { Button } from "@congress/ui/button";
+import type { TFunction } from "i18next";
 import { createFileRoute } from "@tanstack/react-router";
-import { t } from "i18next";
+import { useTranslation } from "react-i18next";
+
+import { Button } from "@congress/ui/button";
+
 import { useBeneficiaryAuth } from "~/lib/beneficiary-auth-provider";
 
 export const Route = createFileRoute("/_authed/dashboard")({
   component: Dashboard,
 });
 
+function getGreeting(t: TFunction, firstName: string) {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) {
+    return t("good_morning", { firstName });
+  } else if (hour >= 12 && hour < 17) {
+    return t("good_noon", { firstName });
+  } else {
+    return t("good_evening", { firstName });
+  }
+}
+
 function Dashboard() {
   const { session } = useBeneficiaryAuth();
+  const { t } = useTranslation();
 
   if (!session) {
     return (
@@ -18,14 +33,17 @@ function Dashboard() {
     );
   }
 
+  const firstName = session.person.firstName || "";
+
   return (
     <main className="container h-screen py-16">
       <div className="flex flex-col gap-4">
         <div className="flex w-full items-center justify-between">
-          {/* <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-            {t("dashboard")}
-          </h1> */}
-          
+          {firstName && (
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              {getGreeting(t, session.person.firstName ?? "")}
+            </h1>
+          )}
         </div>
         {session.account.status === "pending" && (
           <div className="w-full max-w-2xl rounded-lg border border-yellow-500 bg-yellow-50 p-4 text-yellow-800">
