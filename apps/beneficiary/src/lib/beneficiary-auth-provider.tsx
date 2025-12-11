@@ -33,12 +33,13 @@ export function BeneficiaryAuthProvider({
     data: session,
     isLoading,
     refetch: refetchSession,
-  } = useQuery({
-    ...orpc.beneficiaryAuth.getSession.queryOptions(),
-    retry: false, // Don't retry if there's no session
-    retryOnMount: false, // Don't retry on mount if there's no session
-    staleTime: 0, // Always check for fresh session
-  });
+  } = useQuery(
+    orpc.beneficiaryAuth.getSession.queryOptions({
+      retry: false, // Don't retry if there's no session
+      retryOnMount: false, // Don't retry on mount if there's no session
+      staleTime: 0, // Always check for fresh session
+    }),
+  );
 
   const isAuthenticated = !!session;
 
@@ -48,10 +49,10 @@ export function BeneficiaryAuthProvider({
       onSuccess: async () => {
         // Invalidate session query
         await queryClient.invalidateQueries({
-          queryKey: [["beneficiaryAuth", "getSession"]],
+          queryKey: [orpc.beneficiaryAuth.getSession.queryKey()],
         });
         // Navigate to home
-        await navigate({ href: "/", replace: true });
+        await navigate({ to: "/", replace: true });
       },
     }),
   );

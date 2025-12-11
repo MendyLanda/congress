@@ -841,6 +841,14 @@ export const beneficiaryAuthRouter = {
 
     const account = await db.query.BeneficiaryAccount.findFirst({
       where: eq(BeneficiaryAccount.id, session.accountId),
+      with: {
+        person: {
+          columns: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
     });
 
     if (!account) {
@@ -852,6 +860,9 @@ export const beneficiaryAuthRouter = {
         id: account.id,
         nationalId: account.nationalId,
         status: account.status,
+      },
+      person: {
+        firstName: account.person.firstName,
       },
     };
   }),
