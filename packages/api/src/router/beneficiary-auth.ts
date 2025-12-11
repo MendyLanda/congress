@@ -27,6 +27,7 @@ import {
 import { and, createID, eq, inArray, isNull, or } from "@congress/db";
 import { db } from "@congress/db/client";
 import {
+  Application,
   BeneficiaryAccount,
   Person,
   PersonAddress,
@@ -50,6 +51,7 @@ import {
   beneficiarySignupSchema,
 } from "@congress/validators";
 import {
+  AvrechimPassoverGrantProgramVersion,
   identityAppendixDocumentType,
   identityCardDocumentType,
   yeshivaCertificateDocumentType,
@@ -335,14 +337,20 @@ async function ensureRelationship(
   return created;
 }
 
-async function storeDocuments(
-  tx: TransactionClient,
-  personId: number,
+async function storePersonDocuments({
+  tx,
+  documents,
+  personId,
+  applicationId,
+}: {
+  tx: TransactionClient;
+  personId: number;
+  applicationId?: string;
   documents: {
     uploadId: string;
     documentTypeId: string;
-  }[],
-) {
+  }[];
+}) {
   if (documents.length === 0) {
     return;
   }
@@ -363,6 +371,7 @@ async function storeDocuments(
       personId,
       documentTypeId: document.documentTypeId,
       uploadId: document.uploadId,
+      applicationId,
     })),
   );
 }
@@ -609,7 +618,7 @@ export const beneficiaryAuthRouter = {
           });
         }
 
-        const applicant = await upsertPerson(
+        const applicantPerson = await upsertPerson(
           tx,
           {
             nationalId: input.nationalId,
@@ -624,11 +633,11 @@ export const beneficiaryAuthRouter = {
 
         await upsertPhoneContacts(
           tx,
-          applicant.id,
+          applicantPerson.id,
           input.personalPhoneNumber,
           input.homePhoneNumber,
         );
-        await upsertAddress(tx, applicant.id, input.address);
+        await upsertAddress(tx, applicantPerson.id, input.address);
         await upsertYeshivaDetails(tx, input.nationalId, input.yeshivaDetails);
 
         const passwordHash = await hashPassword(input.password);
@@ -667,7 +676,7 @@ export const beneficiaryAuthRouter = {
           }
 
           await ensureRelationship(tx, {
-            personId: applicant.id,
+            personId: applicantPerson.id,
             relatedPersonId: spousePerson.id,
             relationshipType,
           });
@@ -685,13 +694,13 @@ export const beneficiaryAuthRouter = {
             });
 
             await ensureRelationship(tx, {
-              personId: applicant.id,
+              personId: applicantPerson.id,
               relatedPersonId: childPerson.id,
               relationshipType: "child",
             });
             await ensureRelationship(tx, {
               personId: childPerson.id,
-              relatedPersonId: applicant.id,
+              relatedPersonId: applicantPerson.id,
               relationshipType: "parent",
             });
           }
@@ -716,7 +725,25 @@ export const beneficiaryAuthRouter = {
             documentTypeId: yeshivaCertificateDocumentType.id,
           });
         }
-        await storeDocuments(tx, applicant.id, documents);
+        // Automatically submit an application for review.
+        // Normally (in the future), this will be done in a separate step and not as part of the signup process.
+        const [application] = await tx
+          .insert(Application)
+          .values({
+            id: createID("application"),
+            personId: applicantPerson.id,
+            programVersionId: AvrechimPassoverGrantProgramVersion.id,
+            beneficiaryAccountId,
+            status: "pending_review",
+          })
+          .returning();
+
+        await storePersonDocuments({
+          tx,
+          personId: applicantPerson.id,
+          applicationId: application!.id,
+          documents,
+        });
 
         return beneficiaryAccountId;
       });

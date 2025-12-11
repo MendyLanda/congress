@@ -4,7 +4,7 @@ import { createTable } from "../create-table";
 import { ulid } from "../types";
 
 export const User = createTable("user", {
-  id: ulid("user").primaryKey(),
+  id: ulid("id", "user").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
@@ -21,7 +21,7 @@ export const User = createTable("user", {
 });
 
 export const Session = createTable("session", {
-  id: ulid("session").primaryKey(),
+  id: ulid("id", "session").primaryKey(),
   expiresAt: timestamp("expires_at").notNull(),
   token: text("token").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -37,7 +37,7 @@ export const Session = createTable("session", {
 });
 
 export const Account = createTable("account", {
-  id: ulid("account").primaryKey(),
+  id: ulid("id", "account").primaryKey(),
   accountId: text("account_id").notNull(),
   providerId: text("provider_id").notNull(),
   userId: text("user_id")
@@ -57,7 +57,7 @@ export const Account = createTable("account", {
 });
 
 export const Verification = createTable("verification", {
-  id: ulid("verification").primaryKey(),
+  id: ulid("id", "verification").primaryKey(),
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
   expiresAt: timestamp("expires_at").notNull(),

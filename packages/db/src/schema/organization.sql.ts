@@ -80,7 +80,7 @@ export const Coordinator = createTable(
     personId: bigint("person_id", { mode: "number" })
       .notNull()
       .references(() => Person.id, { onDelete: "restrict" }),
-    userId: ulid("user").references(() => User.id, {
+    userId: ulid("user_id", "user").references(() => User.id, {
       onDelete: "set null",
     }), // Dashboard user if they have access
     startDate: date("start_date", { mode: "date" }).notNull(),

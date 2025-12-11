@@ -22,7 +22,10 @@ export const YeshivaDetails = createTable("yeshiva_details", {
   headOfTheYeshivaName: text("head_of_the_yeshiva_name"),
   headOfTheYeshivaPhone: text("head_of_the_yeshiva_phone"),
   yeshivaWorkType: yeshivaWorkTypeEnum("yeshiva_work_type").default("all_day"),
-  yeshivaCertificateUploadId: ulid("upload").references(() => Upload.id, {
+  yeshivaCertificateUploadId: ulid(
+    "yeshiva_certificate_upload_id",
+    "upload",
+  ).references(() => Upload.id, {
     onDelete: "set null",
   }),
   yeshivaType: yeshivaTypeEnum("yeshiva_type").default("kollel"),

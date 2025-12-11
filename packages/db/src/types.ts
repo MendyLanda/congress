@@ -4,8 +4,8 @@ import { prefixes } from "./id";
 
 const ULID_LENGTH = 26;
 
-export const ulid = (prefix: keyof typeof prefixes) =>
-  customChar({ length: ULID_LENGTH + 1 + prefixes[prefix].length });
+export const ulid = (name: string, prefix: keyof typeof prefixes) =>
+  customChar(name, { length: ULID_LENGTH + 1 + prefixes[prefix].length });
 
 export const customChar = customType<{
   data: string;

@@ -1,21 +1,13 @@
 import { relations } from "drizzle-orm";
-import {
-  bigint,
-  bigserial,
-  index,
-  pgEnum,
-  text,
-  timestamp,
-} from "drizzle-orm/pg-core";
+import { bigint, index, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
 
 import { createTable } from "../create-table";
 import { ulid } from "../types";
 import { BeneficiaryAccount } from "./beneficiary-auth.sql";
 import { User } from "./dashboard-auth.sql";
-import { DocumentType } from "./document.sql";
+import { PersonDocument } from "./document.sql";
 import { Person } from "./person.sql";
 import { ProgramVersion } from "./program.sql";
-import { Upload } from "./upload.sql";
 
 /**
  * Application status enum - Lifecycle states for applications
@@ -23,7 +15,7 @@ import { Upload } from "./upload.sql";
 export const applicationStatusEnum = pgEnum("application_status", [
   "draft",
   "submitted",
-  "under_review",
+  "pending_review",
   "pending_documents",
   "committee_review",
   "approved",
@@ -38,29 +30,38 @@ export const applicationStatusEnum = pgEnum("application_status", [
 export const Application = createTable(
   "application",
   {
-    id: bigserial({ mode: "number" }).primaryKey(),
+    id: ulid("id", "application").primaryKey(),
     programVersionId: bigint("program_version_id", { mode: "number" })
       .notNull()
       .references(() => ProgramVersion.id, { onDelete: "restrict" }),
     personId: bigint("person_id", { mode: "number" })
       .notNull()
       .references(() => Person.id, { onDelete: "restrict" }),
-    beneficiaryAccountId: ulid("beneficiaryAccount").references(
-      () => BeneficiaryAccount.id,
-      { onDelete: "set null" },
-    ), // Null for committee-enrolled
+    beneficiaryAccountId: ulid(
+      "beneficiary_account_id",
+      "beneficiaryAccount",
+    ).references(() => BeneficiaryAccount.id, { onDelete: "set null" }), // Null for committee-enrolled
     status: applicationStatusEnum("status").notNull().default("draft"),
     timeSubmitted: timestamp("time_submitted"),
-    submittedByUserId: ulid("user").references(() => User.id, {
-      onDelete: "set null",
-    }), // Staff member who submitted for committee
-    reviewedByUserId: ulid("user").references(() => User.id, {
-      onDelete: "set null",
-    }),
+    submittedByUserId: ulid("submitted_by_user_id", "user").references(
+      () => User.id,
+      {
+        onDelete: "set null",
+      },
+    ), // Staff member who submitted for committee
+    reviewedByUserId: ulid("reviewed_by_user_id", "user").references(
+      () => User.id,
+      {
+        onDelete: "set null",
+      },
+    ),
     timeReviewed: timestamp("time_reviewed"),
-    approvedByUserId: ulid("user").references(() => User.id, {
-      onDelete: "set null",
-    }),
+    approvedByUserId: ulid("approved_by_user_id", "user").references(
+      () => User.id,
+      {
+        onDelete: "set null",
+      },
+    ),
     timeApproved: timestamp("time_approved"),
     rejectionReason: text("rejection_reason"),
     notes: text("notes"), // Internal staff notes
@@ -73,47 +74,6 @@ export const Application = createTable(
       table.beneficiaryAccountId,
     ),
     index("application_time_submitted_index").on(table.timeSubmitted),
-  ],
-);
-
-/**
- * Application document status enum
- */
-export const applicationDocumentStatusEnum = pgEnum(
-  "application_document_status",
-  ["pending", "approved", "rejected"],
-);
-
-/**
- * application_document table - Links uploaded documents to applications
- * Tracks which documents were provided for which application
- */
-export const ApplicationDocument = createTable(
-  "application_document",
-  {
-    id: bigserial({ mode: "number" }).primaryKey(),
-    applicationId: bigint("application_id", { mode: "number" })
-      .notNull()
-      .references(() => Application.id, { onDelete: "cascade" }),
-    documentTypeId: ulid("documentType")
-      .notNull()
-      .references(() => DocumentType.id, { onDelete: "restrict" }),
-    uploadId: ulid("upload")
-      .notNull()
-      .references(() => Upload.id, { onDelete: "restrict" }),
-    status: applicationDocumentStatusEnum("status")
-      .notNull()
-      .default("pending"),
-    reviewedByUserId: ulid("user").references(() => User.id, {
-      onDelete: "set null",
-    }),
-    timeReviewed: timestamp("time_reviewed"),
-    rejectionReason: text("rejection_reason"),
-  },
-  (table) => [
-    index("application_document_application_id_index").on(table.applicationId),
-    index("application_document_upload_id_index").on(table.uploadId),
-    index("application_document_status_index").on(table.status),
   ],
 );
 
@@ -148,27 +108,5 @@ export const applicationRelations = relations(Application, ({ one, many }) => ({
     references: [User.id],
     relationName: "application_approved_by",
   }),
-  documents: many(ApplicationDocument),
+  documents: many(PersonDocument),
 }));
-
-export const applicationDocumentRelations = relations(
-  ApplicationDocument,
-  ({ one }) => ({
-    application: one(Application, {
-      fields: [ApplicationDocument.applicationId],
-      references: [Application.id],
-    }),
-    documentType: one(DocumentType, {
-      fields: [ApplicationDocument.documentTypeId],
-      references: [DocumentType.id],
-    }),
-    upload: one(Upload, {
-      fields: [ApplicationDocument.uploadId],
-      references: [Upload.id],
-    }),
-    reviewedBy: one(User, {
-      fields: [ApplicationDocument.reviewedByUserId],
-      references: [User.id],
-    }),
-  }),
-);

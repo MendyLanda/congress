@@ -70,7 +70,7 @@ export const ProgramDocumentRequirement = createTable(
     programVersionId: bigint("program_version_id", { mode: "number" })
       .notNull()
       .references(() => ProgramVersion.id, { onDelete: "cascade" }),
-    documentTypeId: ulid("documentType")
+    documentTypeId: ulid("document_type_id", "documentType")
       .notNull()
       .references(() => DocumentType.id, { onDelete: "restrict" }),
     isRequired: boolean("is_required").notNull().default(true),

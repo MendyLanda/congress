@@ -1,6 +1,5 @@
 import { relations } from "drizzle-orm";
 import {
-  bigint,
   bigserial,
   index,
   numeric,
@@ -33,10 +32,10 @@ export const ApplicationRecommendation = createTable(
   "application_recommendation",
   {
     id: bigserial({ mode: "number" }).primaryKey(),
-    applicationId: bigint("application_id", { mode: "number" })
+    applicationId: ulid("application_id", "application")
       .notNull()
       .references(() => Application.id, { onDelete: "cascade" }),
-    recommendedByUserId: ulid("user")
+    recommendedByUserId: ulid("recommended_by_user_id", "user")
       .notNull()
       .references(() => User.id, { onDelete: "restrict" }), // Coordinator or committee member
     recommendedAmount: numeric("recommended_amount", {
@@ -46,9 +45,12 @@ export const ApplicationRecommendation = createTable(
     recommendationDate: timestamp("recommendation_date").notNull().defaultNow(),
     notes: text("notes"), // Justification for the recommendation
     status: recommendationStatusEnum("status").notNull().default("pending"),
-    reviewedByUserId: ulid("user").references(() => User.id, {
-      onDelete: "set null",
-    }), // Staff member who reviewed
+    reviewedByUserId: ulid("reviewed_by_user_id", "user").references(
+      () => User.id,
+      {
+        onDelete: "set null",
+      },
+    ), // Staff member who reviewed
     timeReviewed: timestamp("time_reviewed"),
   },
   (table) => [
